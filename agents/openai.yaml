@@ -1,4 +1,4 @@
 interface:
   display_name: "Coding Agent Cleanup"
-  short_description: "Audit Claude routes, apps, and browser signals"
-  default_prompt: "Use $claude-env-cleanup to audit Claude/Codex routing, CC Switch leftovers, browser bridge residue, and locale/font signals before safe cleanup."
+  short_description: "Audit Claude routes, network, and browser signals"
+  default_prompt: "Use $claude-env-cleanup to audit Claude/Codex routing, CC Switch leftovers, DNS/WebRTC leaks, IP purity, browser bridge residue, and locale/font signals before safe cleanup."

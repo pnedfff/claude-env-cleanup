@@ -14,6 +14,7 @@
 - 清理 Claude App、Claude PWA、Claude Code URL Handler、Chrome Native Messaging bridge
 - 排查 `ANTHROPIC_*`、`127.0.0.1:15721`、CC Switch / 302AI / GLM 路由残留
 - 删除 CC Switch app、cask、`~/.cc-switch` 状态
+- 监测 Claude 网络环境：IP 纯净度、DNS 泄露、WebRTC 泄露、节点地区稳定性
 - 检查 browser fingerprint 相关信号，例如系统时区、`Intl` locale、浏览器语言、中文字体探测
 - 审计 coding-agent 配置中的路由覆盖、请求改写、权限绕过和高风险本地网关设置
 
@@ -38,6 +39,14 @@ python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_claude_env.py
 
 脚本只输出安全摘要，例如配置文件是否存在、是否发现 key 名称、路由标记、进程/端口/浏览器桥接状态；不会打印 token、API key、OAuth refresh token 等原始值。
 
+网络环境审计可以运行：
+
+```bash
+python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_network_env.py
+```
+
+默认只做本机代理、DNS、路由、浏览器语言等只读检查。需要公网 IP / Claude 连通性时再加 `--external`。人工复核默认只使用 3 个核心网站：`ip.net.coffee/claude`、`ippure.com/claude`、`iplark.com`。
+
 ### 安全边界
 
 - 默认不删除任何东西。
@@ -55,7 +64,8 @@ python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_claude_env.py
 ├── agents/
 │   └── openai.yaml
 └── scripts/
-    └── audit_claude_env.py
+    ├── audit_claude_env.py
+    └── audit_network_env.py
 ```
 
 ## English
@@ -70,6 +80,7 @@ Its default posture is: **audit first, mutate only when explicitly asked, back u
 - Clean Claude App, Claude PWA, Claude Code URL Handler, and Chrome Native Messaging bridge residue
 - Inspect `ANTHROPIC_*`, `127.0.0.1:15721`, CC Switch / 302AI / GLM route leftovers
 - Remove CC Switch app, cask, and `~/.cc-switch` state
+- Monitor Claude network environment: IP purity, DNS leaks, WebRTC leaks, and node-region stability
 - Inspect browser fingerprint signals such as system timezone, `Intl` locale, browser language, and installed Chinese fonts
 - Audit coding-agent config for route overrides, request rewriting, permission bypasses, and risky local gateway settings
 
@@ -94,6 +105,14 @@ python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_claude_env.py
 
 The script reports safe summaries only, such as file presence, key-name presence, route markers, process/port status, and browser bridge state. It does not print raw tokens, API keys, OAuth refresh tokens, or private config values.
 
+For network environment auditing, run:
+
+```bash
+python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_network_env.py
+```
+
+By default it only checks local proxy, DNS, route, and browser-language state. Add `--external` when you want live public-IP and Claude reachability probes. Manual review defaults to 3 core sites only: `ip.net.coffee/claude`, `ippure.com/claude`, and `iplark.com`.
+
 ### Safety Boundaries
 
 - Do not delete anything by default.
@@ -111,5 +130,6 @@ The script reports safe summaries only, such as file presence, key-name presence
 ├── agents/
 │   └── openai.yaml
 └── scripts/
-    └── audit_claude_env.py
+    ├── audit_claude_env.py
+    └── audit_network_env.py
 ```
