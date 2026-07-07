@@ -1,6 +1,6 @@
 ---
 name: claude-env-cleanup
-description: Audit, clean, and when explicitly requested uninstall local Claude Code, Claude Desktop/PWA, Anthropic browser Native Messaging, Claude Chrome extensions, auth/config residue, CC Switch app/data/routes, Claude network signals, DNS/WebRTC leaks, browser locale/timezone/font signals, and coding-agent config risks on Kevin's Mac while preserving Teamo Code and Claude-to-IM by default. Use for "Claude 环境清理", "清理 Claude 残留", "本地 coding agent 配置清理", "请求链路体检", "网络环境监测", "Claude 网络检测", "DNS 泄露", "WebRTC 泄露", "IP 纯净度", "节点地区稳定", "清理代理/中转/遥测/权限绕过", "卸载 Claude", "删除官方 Claude App", "删除 Claude PWA", "删除 Claude Code URL Handler", "删除 Claude Chrome 扩展", "清理 com.anthropic.claude_browser_extension", "CC Switch 可以删掉", "删除 CC Switch", "ANTHROPIC_*", "127.0.0.1:15721", "系统时区", "Asia/Singapore", "浏览器语言", "Intl 区域设置", "已安装中文字体", "canvas 字体探测", or when a Claude artifact may really be a CLI, app, LaunchAgent, proxy, browser bridge, or config needing backup-first inspection and cleanup.
+description: Audit, clean, and when explicitly requested uninstall local Claude Code, Claude Desktop/PWA, Anthropic browser bridges/extensions, auth/config residue, CC Switch app/data/routes, Claude network signals, DNS/WebRTC leaks, browser locale/timezone/font signals, and coding-agent config risks on Kevin's Mac while preserving Teamo Code and Claude-to-IM by default. Use for "Claude 环境清理", "清理 Claude 残留", "Claude 封号", "被封账号后", "封号自查", "清除浏览器 Cookie", "本地 coding agent 配置清理", "网络环境监测", "Claude 网络检测", "DNS 泄露", "WebRTC 泄露", "IP 纯净度", "节点地区稳定", "卸载 Claude", "删除官方 Claude App", "删除 Claude Code", "CC Switch 可以删掉", "删除 CC Switch", "ANTHROPIC_*", "127.0.0.1:15721", "系统时区", "Asia/Singapore", "浏览器语言", "Intl 区域设置", "已安装中文字体", "canvas 字体探测", or when a Claude artifact may be a CLI, app, LaunchAgent, proxy, browser bridge, or config needing backup-first inspection and cleanup.
 ---
 
 # Claude Env Cleanup
@@ -20,6 +20,8 @@ For coding-agent config hygiene, distinguish active config from historical evide
 For browser locale, timezone, and font signal work, report consistency facts and safe local changes only. Do not delete macOS system fonts or system-protected font assets. It is acceptable to move user-installed fonts to a timestamped backup and clear the user font cache when explicitly requested, but state that macOS system fonts such as PingFang, Hiragino, STHeiti, and Songti/STSong may still be detectable.
 
 For Claude network environment monitoring, prefer browser-visible facts for DNS/WebRTC/IP quality. Local command output is useful for proxy, route, resolver, and history checks, but DNS leak verdicts should be based on browser-side detection whenever possible. Do not open a large battery of sites by default; use only the three core manual checks listed below unless the user asks for more.
+
+Browser cookie and site-data cleanup is a manual, high-blast-radius step. In post-ban workflows, report the relevant browser profile targets and give clear manual steps. Do not delete Chromium/Safari cookie databases, Local Storage, IndexedDB, Service Worker data, cache folders, or whole browser profiles unless Kevin explicitly requests destructive browser-data cleanup and confirms the scope.
 
 ## Quick Audit
 
@@ -49,6 +51,12 @@ When the user explicitly wants live public-IP and Claude reachability checks, ad
 python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_network_env.py --external --append-history ~/.codex/network-env-history.jsonl
 ```
 
+For a banned-account recovery self-check, add `--post-ban` so the audit prints browser site-data targets, manual cleanup reminders, and the five-site guide checklist:
+
+```bash
+python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_network_env.py --post-ban
+```
+
 ## Decision Flow
 
 1. If the user only asks whether Claude leftovers exist, run audit-only and summarize:
@@ -72,7 +80,9 @@ python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_network_env.py --extern
 
 6. If the user asks about Claude network environment, IP purity, DNS leak, WebRTC leak, or node stability, use the "Claude Network Environment Monitoring" pattern. Prefer current browser results from the three core sites over command-line-only conclusions.
 
-7. If the user calls something a Claude "skill" but it may be an installed artifact, verify the artifact class first:
+7. If the user says an account was banned, asks what to do after a ban, or asks to clear browser cookies, remove CC Switch, and re-check Claude App/Code, use the "Post-Ban Account Reset Self-Check" pattern. Keep it audit-first, make manual cookie/site-data actions highly visible, and do not perform destructive browser cleanup unless explicitly requested.
+
+8. If the user calls something a Claude "skill" but it may be an installed artifact, verify the artifact class first:
    - skill folder
    - global npm or Homebrew CLI
    - app bundle
@@ -82,11 +92,11 @@ python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_network_env.py --extern
 
 Then clean the actual artifact class, not the label the user guessed.
 
-8. If the user explicitly asks to delete official Claude App or Claude Code itself, use the "Uninstall Official Claude App and Claude Code" pattern below. This is a broader uninstall than route cleanup; include app bundles, package-manager installs, binaries, LaunchAgents, updater jobs, app support data, caches, preferences, saved state, and logs where present.
+9. If the user explicitly asks to delete official Claude App or Claude Code itself, use the "Uninstall Official Claude App and Claude Code" pattern below. This is a broader uninstall than route cleanup; include app bundles, package-manager installs, binaries, LaunchAgents, updater jobs, app support data, caches, preferences, saved state, and logs where present.
 
-9. If Teamo or `com.claude-to-im.bridge` is mentioned, run a preservation check before and after cleanup: verify `teamo` still resolves, `~/.teamo` still exists, `~/.claude/projects` is not removed, and the bridge is still present/running when it was intentionally preserved.
+10. If Teamo or `com.claude-to-im.bridge` is mentioned, run a preservation check before and after cleanup: verify `teamo` still resolves, `~/.teamo` still exists, `~/.claude/projects` is not removed, and the bridge is still present/running when it was intentionally preserved.
 
-10. If the user asks to clean local coding-agent configs based on request-chain trust rules, audit for four categories:
+11. If the user asks to clean local coding-agent configs based on request-chain trust rules, audit for four categories:
    - provider route overrides: `ANTHROPIC_BASE_URL`, `OPENAI_BASE_URL`, `api_base_url`, `baseUrl`, local proxy ports, third-party routers
    - request rewriting surfaces: Claude Code Router, provider transformers, gateway adapters, custom system-prompt/status-line commands
    - permission bypasses: `bypassPermissions`, skipped dangerous-mode prompts, unsafe host-header fallback
@@ -135,6 +145,9 @@ Treat these as the high-yield inspection points:
 - Claude app caches, preferences, saved state, and logs under `~/Library/`
 - Claude Code local cache and state markers such as `~/Library/Caches/claude-cli-nodejs` and `~/.claude-code-now-last-dir`
 - Shared Claude/Teamo state markers such as `~/.claude` and `~/.claude.json`; these may reappear and are not proof by themselves that official Claude Code is still installed
+- manual browser site-data cleanup targets:
+  - Chromium-family profile stores such as `~/Library/Application Support/Google/Chrome/*/Cookies`, `~/Library/Application Support/Google/Chrome/*/Network/Cookies`, `~/Library/Application Support/Google/Chrome/*/Local Storage`, `~/Library/Application Support/Google/Chrome/*/IndexedDB`, and equivalent Edge/Brave/Arc paths
+  - Safari cookie and storage locations such as `~/Library/Containers/com.apple.Safari/Data/Library/Cookies` and `~/Library/Safari/LocalStorage`
 - current process environment for `ANTHROPIC_*`
 - listener on `127.0.0.1:15721`
 - locale/timezone and browser-signal checks: `/etc/localtime`, `systemsetup -gettimezone` when sudo is available, `date`, browser language/locale settings, `~/Library/Fonts`, `/Library/Fonts`, and macOS system font locations
@@ -244,6 +257,40 @@ Use when the user is comparing local browser/system signals such as `Intl.DateTi
 3. Browser language and `Intl` locale are separate from system timezone and fonts. Treat them as browser/profile settings, not font cleanup.
 4. Be honest about limits: normal Chrome on macOS cannot fully hide system font availability; a clean browser profile, anti-fingerprinting browser, VM, or remote environment may be needed for a different fingerprint.
 
+### Post-Ban Account Reset Self-Check
+
+Use when the user says a Claude account was banned and asks for the three-step reset: clear browser cookies, remove CC Switch, and check/remove Claude Code terminal plus Claude Desktop App. This workflow is audit-first; it can identify cleanup targets, but cookie/site-data clearing and in-browser extension removal are manual unless Kevin explicitly requests destructive browser-data edits.
+
+1. Start with read-only audits:
+   - `python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_claude_env.py`
+   - `python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_network_env.py --post-ban`
+   - Add `--external` only when live public-IP and Claude reachability checks are appropriate.
+2. Step 1, browser reset:
+   - MANUAL REQUIRED: in every browser profile used with the banned account, clear site data/cookies/cache for `claude.ai`, `anthropic.com`, `console.anthropic.com`, and any Claude login/session helper domains.
+   - MANUAL REQUIRED: remove or disable Claude/Anthropic browser extensions and session-key helper extensions tied to the banned account.
+   - MANUAL REQUIRED: restart the browser after clearing, then re-run browser-side DNS/WebRTC/IP checks.
+   - Do not delete a whole browser profile unless the user explicitly asks for that and a backup plan is clear.
+3. Step 2, CC Switch:
+   - If CC Switch is still present and the user has already said it can be deleted, use "Remove CC Switch App and State".
+   - If the user only asked for audit, report whether `/Applications/CC Switch.app`, `~/.cc-switch`, Homebrew cask `cc-switch`, LaunchAgents, processes, and `127.0.0.1:15721` are present.
+   - Preserve `com.claude-to-im.bridge`, Codex, and Teamo.
+4. Step 3, Claude Code terminal and Desktop App:
+   - If the user explicitly asks to delete official Claude App/Code, use "Uninstall Official Claude App and Claude Code".
+   - If the user only asks to self-check, report `which -a claude`, `@anthropic-ai/claude-code`, `/Applications/Claude.app`, Chrome PWA shortcut, Claude Code URL Handler, Native Messaging manifests, Claude extensions, app support/cache/preferences/logs, and official Claude processes.
+   - Preserve `~/.claude/projects`, `~/.teamo`, and `com.claude-to-im.bridge` unless separately requested.
+5. After the three cleanup areas, open or instruct the user to open the five guide sites and record screenshots or key verdicts:
+   - `https://ip.net.coffee/claude/`
+   - `https://iplark.com/`
+   - `https://net.coffee/`
+   - `https://ippure.com/`
+   - `https://cc.mastersgo.cc/`
+   Treat `net.coffee` as a tool hub if it does not show a direct Claude result page; use its Claude/DNS/WebRTC tools as needed.
+6. Report in four buckets:
+   - automatically checked
+   - manual action required
+   - destructive cleanup performed with backup paths
+   - remaining risks before using a new account
+
 ### Claude Network Environment Monitoring
 
 Use when the user asks to check Claude network environment, IP purity, DNS leak, WebRTC leak, node region stability, or the "5 checks" from a Claude usage guide.
@@ -251,6 +298,7 @@ Use when the user asks to check Claude network environment, IP purity, DNS leak,
 1. Run the local audit first:
    - `python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_network_env.py`
    - Add `--external` only when live public-IP and Claude endpoint requests are appropriate.
+   - Add `--post-ban` when the user wants the five-site post-ban guide checklist and browser site-data cleanup reminders.
    - Add `--append-history ~/.codex/network-env-history.jsonl` when the user wants node-region drift monitoring.
 2. Open only these three core browser checks by default:
    - `https://ip.net.coffee/claude/` for Claude-specific IP trust, Claude reachability, DNS/WebRTC links, timezone, and language.
@@ -326,6 +374,7 @@ After edits, verify with targeted checks:
 - coding-agent active configs no longer contain stale router endpoints, permission-bypass defaults, or unsafe Host Header fallback unless intentionally preserved
 - `/etc/localtime` points to the intended timezone after timezone changes
 - `~/Library/Fonts` user-installed fonts are absent or intentionally present after font-signal tests
+- post-ban self-check reports browser cookie/site-data targets, makes manual browser cleanup actions explicit, confirms CC Switch state, confirms official Claude App/Code state, and records the five guide-site verdicts
 - network audit reports expected proxy/DNS/default-route state, browser checks show no DNS/WebRTC leak, and history does not show unintended country/ASN drift when monitoring is enabled
 - for app/CLI/browser-bridge uninstall, `/Applications/Claude.app`, `~/Applications/Chrome Apps.localized/Claude.app`, and `~/Applications/Claude Code URL Handler.app` are absent, `which -a claude` finds nothing, `npm list -g --depth=0` and `~/.npm/_npx` have no `@anthropic-ai/claude-code`, `~/Library/Caches/claude-cli-nodejs` is absent, Anthropic Native Messaging manifests are absent, Claude browser extension IDs are absent or intentionally preserved, and no official Claude process remains
 - for Teamo and bridge preservation, `which -a teamo` or `/opt/homebrew/bin/teamo --version` still works, `~/.teamo` plus `~/.claude/projects` remain, and intentionally preserved `com.claude-to-im.bridge` remains loaded/running

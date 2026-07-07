@@ -29,6 +29,14 @@ MANUAL_CHECK_URLS = [
     ("Independent IP intelligence, geo consistency, score", "https://iplark.com/"),
 ]
 
+POST_BAN_CHECK_URLS = [
+    ("Net.Coffee Claude detector", "https://ip.net.coffee/claude/"),
+    ("IPLark IP intelligence", "https://iplark.com/"),
+    ("Net.Coffee tool hub", "https://net.coffee/"),
+    ("IPPure detector", "https://ippure.com/"),
+    ("CC MastersGo Claude detector", "https://cc.mastersgo.cc/"),
+]
+
 PUBLIC_IP_ENDPOINTS = [
     ("api.ipify.org", "https://api.ipify.org?format=json", "json"),
     ("ifconfig.co", "https://ifconfig.co/json", "json"),
@@ -60,6 +68,14 @@ LANGUAGE_KEYS = [
     ("intl", "app_locale"),
     ("browser", "app_locale"),
     ("language", "preferred_languages"),
+]
+
+SITE_DATA_MARKERS = [
+    ("Cookies", pathlib.Path("Cookies")),
+    ("Network/Cookies", pathlib.Path("Network") / "Cookies"),
+    ("Local Storage", pathlib.Path("Local Storage")),
+    ("IndexedDB", pathlib.Path("IndexedDB")),
+    ("Service Worker", pathlib.Path("Service Worker")),
 ]
 
 
@@ -358,10 +374,55 @@ def browser_language_summary() -> dict[str, dict[str, Any]]:
     return summary
 
 
-def manual_quality_checks() -> None:
+def browser_site_data_targets() -> None:
+    print_section("Browser Site-Data Cleanup Targets")
+    print("- read-only inventory only; cookie databases and storage contents are not opened or printed")
+    found = False
+    for name, root in BROWSER_ROOTS:
+        if not root.exists():
+            continue
+        for pref_path in sorted(root.glob("*/Preferences")):
+            profile = pref_path.parent
+            markers = [label for label, rel_path in SITE_DATA_MARKERS if (profile / rel_path).exists()]
+            if not markers:
+                continue
+            found = True
+            print(f"- {name}/{profile.name}: {', '.join(markers)}")
+    safari_cookie_dir = HOME / "Library" / "Containers" / "com.apple.Safari" / "Data" / "Library" / "Cookies"
+    safari_local_storage = HOME / "Library" / "Safari" / "LocalStorage"
+    safari_markers = []
+    if safari_cookie_dir.exists():
+        safari_markers.append(str(safari_cookie_dir))
+    if safari_local_storage.exists():
+        safari_markers.append(str(safari_local_storage))
+    if safari_markers:
+        found = True
+        print("- Safari:")
+        for marker in safari_markers:
+            print(f"  {marker}")
+    if not found:
+        print("- no common browser site-data stores found")
+    print("- MANUAL REQUIRED: clear Claude/Anthropic site data from every browser profile used by the banned account")
+
+
+def post_ban_manual_cleanup_reminders() -> None:
+    print_section("Post-Ban Manual Cleanup Reminders")
+    print("- MANUAL REQUIRED: clear cookies/site data/cache for claude.ai, anthropic.com, console.anthropic.com, and any Claude login helper domains in every browser profile used")
+    print("- MANUAL REQUIRED: remove or disable Claude/Anthropic browser extensions and session-key helper extensions tied to the banned account")
+    print("- MANUAL REQUIRED: restart the browser after clearing site data, then re-run the five browser checks")
+    print("- DO NOT delete an entire browser profile unless the user explicitly requested full browser-data removal and a backup exists")
+
+
+def manual_quality_checks(post_ban: bool = False) -> None:
     print_section("Manual Quality Checks")
-    print("- use these browser checks when judging node cleanliness; do not rely on one site only")
-    for label, url in MANUAL_CHECK_URLS:
+    if post_ban:
+        print("- post-ban mode uses the five sites from the pasted Claude guide")
+        print("- net.coffee is a tool hub; use its relevant Claude/DNS/WebRTC tools when it opens as a homepage")
+        urls = POST_BAN_CHECK_URLS
+    else:
+        print("- use these browser checks when judging node cleanliness; do not rely on one site only")
+        urls = MANUAL_CHECK_URLS
+    for label, url in urls:
         print(f"  {label}: {url}")
     print("- target criteria from the pasted Claude guide:")
     print("  overseas IP, stable country/region, no frequent auto-switching, risk score below 20%, shared users <= 10 when the site reports it")
@@ -435,6 +496,7 @@ def build_snapshot(external: dict[str, Any], browser_summary: dict[str, Any], li
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--external", action="store_true", help="query public IP services and Claude endpoints")
+    parser.add_argument("--post-ban", action="store_true", help="print the post-ban browser cleanup checklist and five-site review list")
     parser.add_argument("--timeout", type=int, default=8, help="network timeout in seconds")
     parser.add_argument("--history", type=pathlib.Path, help="compare against a JSONL history file without writing")
     parser.add_argument("--append-history", type=pathlib.Path, help="append this run to a JSONL history file")
@@ -449,6 +511,8 @@ def main() -> int:
     print_section("Baseline Criteria")
     print("- expected Claude account hygiene: one clean overseas region, stable node, no automatic country switching")
     print("- risk thresholds from pasted guide: prefer all-green checks, risk score below 20%, shared users <= 10 when available")
+    if args.post_ban:
+        print("- post-ban checklist mode: audit first, then perform browser/app cleanup manually or only after explicit delete requests")
 
     local_proxy_env()
     dns_system_summary()
@@ -463,7 +527,10 @@ def main() -> int:
         print_section("External IP and Claude Reachability")
         print("- skipped; pass --external to query public IP services and Claude endpoints")
 
-    manual_quality_checks()
+    if args.post_ban:
+        browser_site_data_targets()
+        post_ban_manual_cleanup_reminders()
+    manual_quality_checks(post_ban=args.post_ban)
     history_path = args.append_history or args.history
     snapshot = build_snapshot(external, browser_summary, listeners)
     compare_history(history_path, snapshot, append=bool(args.append_history))
