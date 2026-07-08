@@ -17,6 +17,7 @@
 - 监测 Claude 网络环境：IP 纯净度、DNS 泄露、WebRTC 泄露、节点地区稳定性
 - Claude 账号被封后的三步自查：清浏览器 Cookie/站点数据、删除 CC Switch、检查 Claude Code 终端和桌面 App
 - 生成本机脱敏环境基线：时区、语言、出口地区、DNS、ASN、WebRTC 与 PWR 遥测指纹结论
+- 开启官方 Claude Code 隐私控制：telemetry、error reporting、feedback、survey、nonessential traffic
 - 梳理新账号早期使用和指纹重置 takeaways
 - 检查 browser fingerprint 相关信号，例如系统时区、`Intl` locale、浏览器语言、中文字体探测
 - 审计 coding-agent 配置中的路由覆盖、请求改写、权限绕过和高风险本地网关设置
@@ -42,6 +43,8 @@ python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_claude_env.py
 
 脚本只输出安全摘要，例如配置文件是否存在、是否发现 key 名称、路由标记、进程/端口/浏览器桥接状态；不会打印 token、API key、OAuth refresh token 等原始值。
 
+审计脚本也会检查官方 Claude 隐私控制是否已在当前进程或 `~/.claude/settings*.json` 的 `env` 块中启用。
+
 网络环境审计可以运行：
 
 ```bash
@@ -66,9 +69,41 @@ python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_network_env.py --post-b
 
 这份文件只应保存地区、时区、语言、代理本地端口、DNS 摘要、ASN/服务商、WebRTC 结论、PWR 遥测指纹风险结论等信息；不要保存完整公网 IP、局域网 IP、网关、Tailnet 地址、精确 WebRTC candidate、PWR 原始遥测 payload、Cookie、token 或密钥。
 
+### 官方隐私控制
+
+Claude Code 官方数据页说明可以用环境变量关闭遥测、错误上报、反馈命令、会话满意度调查和非必要流量。官方设置页说明这些环境变量也可以放进 `settings.json` 的顶层 `env` 对象。
+
+推荐写入 `~/.claude/settings.json`：
+
+```json
+{
+  "env": {
+    "DISABLE_TELEMETRY": "1",
+    "DISABLE_ERROR_REPORTING": "1",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "DISABLE_FEEDBACK_COMMAND": "1",
+    "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
+    "DO_NOT_TRACK": "1"
+  }
+}
+```
+
+注意：
+
+- 这是隐私控制，不等于零数据保留，也不等于完整指纹重置。
+- `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` 不会关闭 WebFetch 域名安全预检。
+- `skipWebFetchPreflight: true` 是单独的 WebFetch 安全预检关闭项，有安全权衡，默认不建议自动设置。
+- 修改后重启 Claude Code、Claude Desktop 和相关终端会话。
+
+参考：
+
+- [Claude Code data usage](https://code.claude.com/docs/en/data-usage)
+- [Claude Code settings](https://code.claude.com/docs/en/settings)
+
 Codex 可以自动做：
 
 - 运行只读审计，读取时区、语言、代理、系统 DNS、默认路由、本地端口和公网出口摘要。
+- 备份并合并官方隐私控制到 `~/.claude/settings.json` 的 `env` 块。
 - 创建 `~/.claude/session-env/`。
 - 写入脱敏候选档案。
 - 复读检查文件里没有明显完整公网 IP、内网 IP、Tailnet 地址、WebRTC candidate、Cookie 或密钥。
@@ -130,6 +165,7 @@ Its default posture is: **audit first, mutate only when explicitly asked, back u
 - Monitor Claude network environment: IP purity, DNS leaks, WebRTC leaks, and node-region stability
 - Run a post-ban three-step self-check: clear browser cookies/site data, remove CC Switch, and inspect Claude Code plus Claude Desktop
 - Generate a sanitized local environment baseline: timezone, language, exit region, DNS, ASN, WebRTC, and PWR telemetry fingerprint verdicts
+- Enable official Claude Code privacy controls for telemetry, error reporting, feedback, surveys, and nonessential traffic
 - Summarize early-account usage and fingerprint-reset takeaways
 - Inspect browser fingerprint signals such as system timezone, `Intl` locale, browser language, and installed Chinese fonts
 - Audit coding-agent config for route overrides, request rewriting, permission bypasses, and risky local gateway settings
@@ -155,6 +191,8 @@ python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_claude_env.py
 
 The script reports safe summaries only, such as file presence, key-name presence, route markers, process/port status, and browser bridge state. It does not print raw tokens, API keys, OAuth refresh tokens, or private config values.
 
+The audit also checks whether official Claude privacy controls are enabled in the current process or in the `env` block of `~/.claude/settings*.json`.
+
 For network environment auditing, run:
 
 ```bash
@@ -179,9 +217,41 @@ For a reusable local environment baseline, store the sanitized profile at:
 
 The profile should keep region, timezone, languages, local proxy ports, DNS summary, ASN/provider, WebRTC verdicts, and PWR telemetry fingerprint risk verdicts only. Do not store full public IPs, LAN IPs, gateways, tailnet addresses, exact WebRTC candidates, raw PWR telemetry payloads, cookies, tokens, or secrets.
 
+### Official Privacy Controls
+
+Claude Code's official data usage page documents environment variables for disabling telemetry, error reporting, feedback, session surveys, and nonessential traffic. The official settings page says environment variables can also be configured under the top-level `env` key in `settings.json`.
+
+Recommended `~/.claude/settings.json` values:
+
+```json
+{
+  "env": {
+    "DISABLE_TELEMETRY": "1",
+    "DISABLE_ERROR_REPORTING": "1",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "DISABLE_FEEDBACK_COMMAND": "1",
+    "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
+    "DO_NOT_TRACK": "1"
+  }
+}
+```
+
+Notes:
+
+- This is a privacy-control posture, not zero data retention or a full fingerprint reset.
+- `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` does not disable the WebFetch domain safety check.
+- `skipWebFetchPreflight: true` is a separate WebFetch safety-check opt-out with security tradeoffs and should not be set automatically by default.
+- Restart Claude Code, Claude Desktop, and related terminal sessions after changing these values.
+
+References:
+
+- [Claude Code data usage](https://code.claude.com/docs/en/data-usage)
+- [Claude Code settings](https://code.claude.com/docs/en/settings)
+
 Codex can automatically:
 
 - Run read-only audits for timezone, language, proxy, system DNS, default route, local ports, and public-exit summaries.
+- Back up and merge official privacy controls into the `env` block of `~/.claude/settings.json`.
 - Create `~/.claude/session-env/`.
 - Write a sanitized candidate profile.
 - Re-read the file to check that it does not contain obvious full public IPs, LAN IPs, tailnet addresses, WebRTC candidates, cookies, or secrets.

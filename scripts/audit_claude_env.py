@@ -153,6 +153,26 @@ SENSITIVE_KEYS = {
     "oauthAccount",
 }
 
+CORE_PRIVACY_CONTROL_KEYS = [
+    "DISABLE_TELEMETRY",
+    "DISABLE_ERROR_REPORTING",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC",
+    "DISABLE_FEEDBACK_COMMAND",
+    "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY",
+    "DO_NOT_TRACK",
+]
+
+PRIVACY_CONTROL_KEYS = set(CORE_PRIVACY_CONTROL_KEYS)
+
+PRIVACY_OVERRIDE_KEYS = {
+    "CLAUDE_CODE_ENABLE_FEEDBACK_SURVEY_FOR_OTEL",
+}
+
+PRIVACY_SETTING_KEYS = {
+    "skipWebFetchPreflight",
+    "feedbackSurveyRate",
+}
+
 MARKERS = [
     "127.0.0.1:15721",
     "localhost:15721",
@@ -233,12 +253,15 @@ def scan_text_file(path: pathlib.Path) -> None:
     text = path.read_text(errors="replace")
     hits = [marker for marker in MARKERS if marker in text]
     key_hits = [key for key in SENSITIVE_KEYS if key in text]
+    privacy_hits = [key for key in [*PRIVACY_CONTROL_KEYS, *PRIVACY_OVERRIDE_KEYS] if key in text]
     if key_hits:
         print(f"- {rel(path)} sensitive-key names present: {', '.join(sorted(key_hits))}")
+    if privacy_hits:
+        print(f"- {rel(path)} privacy-control names present: {', '.join(sorted(privacy_hits))}")
     if hits:
         print(f"- {rel(path)} route markers present: {', '.join(sorted(hits))}")
-    if not key_hits and not hits:
-        print(f"- {rel(path)} no configured key names or known route markers found")
+    if not key_hits and not privacy_hits and not hits:
+        print(f"- {rel(path)} no configured key names, privacy controls, or known route markers found")
 
 
 def scan_json_file(path: pathlib.Path) -> None:
@@ -250,12 +273,15 @@ def scan_json_file(path: pathlib.Path) -> None:
         return
 
     key_paths: list[str] = []
+    privacy_paths: list[str] = []
     marker_hits: dict[str, list[str]] = {marker: [] for marker in MARKERS}
 
     for json_path, value in iter_json_paths(obj):
         key = json_path.split(".")[-1].split("[")[0]
         if key in SENSITIVE_KEYS:
             key_paths.append(json_path)
+        if key in PRIVACY_CONTROL_KEYS or key in PRIVACY_OVERRIDE_KEYS or key in PRIVACY_SETTING_KEYS:
+            privacy_paths.append(json_path)
         if isinstance(value, str):
             for marker in MARKERS:
                 if marker in value:
@@ -265,6 +291,9 @@ def scan_json_file(path: pathlib.Path) -> None:
         print(f"- {rel(path)} sensitive-key paths present: {', '.join(sorted(key_paths)[:30])}")
     else:
         print(f"- {rel(path)} no sensitive-key paths found")
+
+    if privacy_paths:
+        print(f"- {rel(path)} privacy-control paths present: {', '.join(sorted(privacy_paths)[:30])}")
 
     for marker, paths in marker_hits.items():
         if paths:
@@ -282,6 +311,7 @@ def scan_json_config_summary(path: pathlib.Path) -> None:
     permission_paths: list[str] = []
     marker_hits: dict[str, list[str]] = {marker: [] for marker in MARKERS}
     sensitive_paths: list[str] = []
+    privacy_paths: list[str] = []
 
     for json_path, value in iter_json_paths(obj):
         key = json_path.split(".")[-1].split("[")[0]
@@ -295,6 +325,8 @@ def scan_json_config_summary(path: pathlib.Path) -> None:
             permission_paths.append(f"{json_path}={value!r}")
         if key in SENSITIVE_KEYS:
             sensitive_paths.append(json_path)
+        if key in PRIVACY_CONTROL_KEYS or key in PRIVACY_OVERRIDE_KEYS or key in PRIVACY_SETTING_KEYS:
+            privacy_paths.append(json_path)
         if isinstance(value, str):
             for marker in MARKERS:
                 if marker in value:
@@ -306,10 +338,18 @@ def scan_json_config_summary(path: pathlib.Path) -> None:
         print(f"- {rel(path)} permission-risk keys: {', '.join(permission_paths[:30])}")
     if sensitive_paths:
         print(f"- {rel(path)} sensitive-key paths present: {', '.join(sensitive_paths[:30])}")
+    if privacy_paths:
+        print(f"- {rel(path)} privacy-control paths present: {', '.join(privacy_paths[:30])}")
     for marker, paths in marker_hits.items():
         if paths:
             print(f"  marker {marker!r} at: {', '.join(paths[:20])}")
-    if not route_paths and not permission_paths and not sensitive_paths and not any(marker_hits.values()):
+    if (
+        not route_paths
+        and not permission_paths
+        and not sensitive_paths
+        and not privacy_paths
+        and not any(marker_hits.values())
+    ):
         print(f"- {rel(path)} no route, permission-risk, or sensitive-key paths found")
 
 
@@ -342,7 +382,12 @@ def scan_sqlite(path: pathlib.Path) -> None:
             cols = conn.execute(f"PRAGMA table_info({quote_ident(table)})").fetchall()
             text_cols = [row[1] for row in cols]
             for col in text_cols:
-                for marker in [*MARKERS, *SENSITIVE_KEYS]:
+                for marker in [
+                    *MARKERS,
+                    *SENSITIVE_KEYS,
+                    *PRIVACY_CONTROL_KEYS,
+                    *PRIVACY_OVERRIDE_KEYS,
+                ]:
                     try:
                         count = conn.execute(
                             f"SELECT COUNT(*) FROM {quote_ident(table)} "
@@ -352,7 +397,12 @@ def scan_sqlite(path: pathlib.Path) -> None:
                     except Exception:
                         continue
                     if count:
-                        label = "sensitive-key name" if marker in SENSITIVE_KEYS else "route marker"
+                        if marker in SENSITIVE_KEYS:
+                            label = "sensitive-key name"
+                        elif marker in PRIVACY_CONTROL_KEYS or marker in PRIVACY_OVERRIDE_KEYS:
+                            label = "privacy-control name"
+                        else:
+                            label = "route marker"
                         print(
                             f"  {label} {marker!r}: {count} row(s) in "
                             f"{table}.{col}"
@@ -408,6 +458,67 @@ def scan_env() -> None:
         print(f"- ANTHROPIC_* names present: {', '.join(names)}")
     else:
         print("- no ANTHROPIC_* names present in this process")
+
+
+def privacy_value_state(value: Any) -> str:
+    if value is True:
+        return "enabled"
+    if value is False or value is None:
+        return "disabled-looking"
+    text = str(value).strip().lower()
+    if text in {"1", "true", "yes", "on"}:
+        return "enabled"
+    if text in {"", "0", "false", "no", "off"}:
+        return "disabled-looking"
+    return "set"
+
+
+def scan_privacy_controls() -> None:
+    print_section("Official Claude Privacy Controls")
+    process_configured = [
+        f"{key}={privacy_value_state(os.environ.get(key))}"
+        for key in CORE_PRIVACY_CONTROL_KEYS
+        if key in os.environ
+    ]
+    if process_configured:
+        print(f"- current process: {', '.join(process_configured)}")
+    else:
+        print("- current process: no official privacy-control env names present")
+
+    for path in [
+        HOME / ".claude" / "settings.json",
+        HOME / ".claude" / "settings.local.json",
+    ]:
+        if not path.exists():
+            print(f"- {rel(path)} missing")
+            continue
+        try:
+            obj = json.loads(path.read_text(errors="replace"))
+        except Exception as exc:
+            print(f"- {rel(path)} JSON parse failed: {exc}")
+            continue
+
+        env = obj.get("env")
+        if not isinstance(env, dict):
+            print(f"- {rel(path)} has no top-level env block")
+            continue
+
+        configured = [
+            f"{key}={privacy_value_state(env.get(key))}"
+            for key in CORE_PRIVACY_CONTROL_KEYS
+            if key in env
+        ]
+        missing = [key for key in CORE_PRIVACY_CONTROL_KEYS if key not in env]
+        if configured:
+            print(f"- {rel(path)} env privacy controls: {', '.join(configured)}")
+        if missing:
+            print(f"  missing recommended controls: {', '.join(missing)}")
+        if "skipWebFetchPreflight" in obj:
+            state = privacy_value_state(obj.get("skipWebFetchPreflight"))
+            print(
+                "  WebFetch preflight override present: "
+                f"skipWebFetchPreflight={state} (separate security tradeoff)"
+            )
 
 
 def scan_port() -> None:
@@ -737,6 +848,7 @@ def main() -> int:
     scan_files()
     scan_coding_agent_configs()
     scan_env()
+    scan_privacy_controls()
     scan_port()
     scan_cc_switch_artifacts()
     scan_locale_font_signals()

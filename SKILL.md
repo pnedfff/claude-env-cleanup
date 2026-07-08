@@ -1,6 +1,6 @@
 ---
 name: claude-env-cleanup
-description: Audit, clean, and when explicitly requested uninstall local Claude Code, Claude Desktop/PWA, Anthropic browser bridges/extensions, auth/config residue, CC Switch app/data/routes, Claude network signals, DNS/WebRTC leaks, browser locale/timezone/font signals, PWR telemetry fingerprint, environment fingerprint baseline, and coding-agent config risks on Kevin's Mac while preserving Teamo Code and Claude-to-IM by default. Use for "Claude 环境清理", "清理 Claude 残留", "Claude 封号", "被封账号后", "封号自查", "指纹重置", "养号期", "清除浏览器 Cookie", "本地 coding agent 配置清理", "网络环境监测", "环境指纹档案", "PWR 遥测指纹", "Claude 网络检测", "DNS 泄露", "WebRTC 泄露", "IP 纯净度", "节点地区稳定", "卸载 Claude", "删除官方 Claude App", "删除 Claude Code", "CC Switch 可以删掉", "删除 CC Switch", "ANTHROPIC_*", "127.0.0.1:15721", "系统时区", "Asia/Singapore", "浏览器语言", "已安装中文字体", "canvas 字体探测", or when a Claude artifact may be a CLI, app, LaunchAgent, proxy, browser bridge, or config needing backup-first inspection and cleanup.
+description: Audit, clean, and when explicitly requested uninstall local Claude Code, Claude Desktop/PWA, Anthropic browser bridges/extensions, auth/config residue, CC Switch app/data/routes, Claude network signals, DNS/WebRTC leaks, browser locale/timezone/font signals, PWR telemetry fingerprint, environment fingerprint baseline, official Claude privacy controls, and coding-agent config risks on Kevin's Mac while preserving Teamo Code and Claude-to-IM by default. Use for "Claude 环境清理", "清理 Claude 残留", "Claude 封号", "被封账号后", "封号自查", "指纹重置", "养号期", "清除浏览器 Cookie", "Claude 隐私控制", "DISABLE_TELEMETRY", "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC", "网络环境监测", "环境指纹档案", "PWR 遥测指纹", "DNS 泄露", "WebRTC 泄露", "IP 纯净度", "卸载 Claude", "删除官方 Claude App", "删除 Claude Code", "CC Switch 可以删掉", "删除 CC Switch", "ANTHROPIC_*", "127.0.0.1:15721", "系统时区", "Asia/Singapore", "浏览器语言", "canvas 字体探测", or when a Claude artifact may be a CLI, app, LaunchAgent, proxy, browser bridge, or config needing backup-first inspection and cleanup.
 ---
 
 # Claude Env Cleanup
@@ -25,6 +25,8 @@ Browser cookie and site-data cleanup is a manual, high-blast-radius step. In pos
 
 For environment fingerprint profiles, store only a sanitized local baseline by default. Keep region, timezone, locale/languages, proxy local ports, DNS resolver summary, ASN/provider, WebRTC verdicts, and PWR telemetry fingerprint verdicts when available. Redact or omit raw public IPs, LAN IPs, gateways, tailnet addresses, mDNS candidate values, browser profile names, raw PWR telemetry payloads, cookie contents, tokens, and secrets. Do not commit user-specific profile files to a public skill repo.
 
+For official Claude Code privacy controls, prefer Anthropic's documented environment variables in `~/.claude/settings.json` under the top-level `env` key. These are low-risk config writes after backup, but they still require restarting Claude Code/terminal apps to ensure startup-read env values apply. Do not set `skipWebFetchPreflight` by default; it is a separate WebFetch safety-check opt-out with a security tradeoff, not part of `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`.
+
 ## Quick Audit
 
 Run the bundled read-only audit first:
@@ -40,6 +42,8 @@ python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_claude_env.py
 ```
 
 Use the output to decide which workflow applies. If the audit finds sensitive keys, say only that the key exists and where it is configured, not its value.
+
+The audit also reports official Claude privacy controls from the current process and `~/.claude/settings*.json`, including `DISABLE_TELEMETRY`, `DISABLE_ERROR_REPORTING`, `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`, `DISABLE_FEEDBACK_COMMAND`, `CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY`, and `DO_NOT_TRACK`.
 
 For network environment monitoring, run the read-only network audit:
 
@@ -112,11 +116,20 @@ Then clean the actual artifact class, not the label the user guessed.
 
 Clean only active-risk items by default. Preserve intentional tools and credentials unless the user asks to remove the tool itself.
 
+14. If the user asks to enable official Claude Code privacy controls, use the "Official Claude Code Privacy Controls" pattern. Prefer the documented `env` block in `~/.claude/settings.json`, back up before editing, validate JSON after editing, and remind the user to restart Claude Code and terminal apps.
+
 ## Known Local Surfaces
 
 Treat these as the high-yield inspection points:
 
 - `~/.claude/settings.json`
+- `~/.claude/settings.json` top-level `env` privacy controls:
+  - `DISABLE_TELEMETRY`
+  - `DISABLE_ERROR_REPORTING`
+  - `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`
+  - `DISABLE_FEEDBACK_COMMAND`
+  - `CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY`
+  - `DO_NOT_TRACK`
 - `~/.claude/settings.bailian.json` (separate profile; do not merge with main route)
 - `~/.claude.json`
 - `~/.codex/config.toml`
@@ -165,6 +178,8 @@ Treat these as the high-yield inspection points:
 Route residue indicators include `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_API_KEY`, `ANTHROPIC_BASE_URL`, `ANTHROPIC_MODEL`, `ANTHROPIC_MODEL_NAME`, `OPENAI_BASE_URL`, `PROXY_MANAGED`, `127.0.0.1:15721`, `302ai-claude-code`, `claude-official`, `api.302.ai`, `glm-5.2`, `proxy_live_backup`, `claude-code-router`, `openrouter`, `anyrouter`, `api.deepseek.com`, `open.bigmodel.cn`, `teamocode.com`, and `code.newcli.com`.
 
 Permission-risk indicators include `bypassPermissions`, `skipDangerousModePermissionPrompt`, and `dangerouslyAllowHostHeaderOriginFallback`.
+
+Privacy-control indicators include `DISABLE_TELEMETRY`, `DISABLE_ERROR_REPORTING`, `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`, `DISABLE_FEEDBACK_COMMAND`, `CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY`, `DO_NOT_TRACK`, `CLAUDE_CODE_ENABLE_FEEDBACK_SURVEY_FOR_OTEL`, and the separate setting `skipWebFetchPreflight`.
 
 ## Cleanup Patterns
 
@@ -247,6 +262,28 @@ Use when the user asks to apply the high-permission coding-agent trust rule.
 6. Set OpenClaw local gateway `dangerouslyAllowHostHeaderOriginFallback` to false unless the user explicitly needs LAN host-header fallback.
 7. Move debug/telemetry/router logs and old key-bearing backups out of active home folders when the user asks for privacy cleanup; keep them in a timestamped backup instead of deleting permanently.
 8. Preserve Teamo, Codex auth, project sessions, and bridge runtimes unless removal is explicitly requested.
+
+### Official Claude Code Privacy Controls
+
+Use when the user asks to enable Claude privacy controls, turn off telemetry/error reporting, block nonessential traffic, or mentions `DISABLE_TELEMETRY`, `DISABLE_ERROR_REPORTING`, or `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`. Official reference pages:
+
+- `https://code.claude.com/docs/en/data-usage`
+- `https://code.claude.com/docs/en/settings`
+
+1. Back up `~/.claude/settings.json` before editing. If it does not exist, create it as a valid JSON object.
+2. Merge these recommended values into the top-level `env` object:
+   - `DISABLE_TELEMETRY: "1"`
+   - `DISABLE_ERROR_REPORTING: "1"`
+   - `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1"`
+   - `DISABLE_FEEDBACK_COMMAND: "1"`
+   - `CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY: "1"`
+   - `DO_NOT_TRACK: "1"`
+3. Do not set `skipWebFetchPreflight` unless the user specifically asks to disable the WebFetch domain safety check and accepts the security tradeoff.
+4. Do not set auto-update or feature-flag-disabling variables as part of the privacy-control default unless the user asks for that narrower behavior.
+5. Validate with `python3 -m json.tool ~/.claude/settings.json`.
+6. Re-run `python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_claude_env.py` and confirm the "Official Claude Privacy Controls" section reports the expected controls.
+7. Tell the user to restart Claude Code, Claude Desktop if relevant, and terminal sessions. Some settings reload on file change, but env-style controls are safest after process restart.
+8. Clarify scope: these controls opt out of documented telemetry, error reporting, feedback, surveys, and nonessential traffic; they are not the same thing as zero data retention, browser cookie cleanup, or a full fingerprint reset.
 
 ### Locale, Time Zone, and Font Signal Hygiene
 
@@ -440,6 +477,7 @@ After edits, verify with targeted checks:
 - route markers are absent or intentionally present
 - `lsof -nP -iTCP:15721 -sTCP:LISTEN` matches the intended state
 - Claude/Codex config no longer contains unexpected `ANTHROPIC_*` route overrides
+- official Claude privacy controls are present in `~/.claude/settings.json` under `env` when requested, and `skipWebFetchPreflight` is absent unless intentionally enabled
 - CC Switch app/cask/data are absent when removal was requested
 - coding-agent active configs no longer contain stale router endpoints, permission-bypass defaults, or unsafe Host Header fallback unless intentionally preserved
 - `/etc/localtime` points to the intended timezone after timezone changes
