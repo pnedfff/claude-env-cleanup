@@ -426,7 +426,7 @@ def manual_quality_checks(post_ban: bool = False) -> None:
         print(f"  {label}: {url}")
     print("- target criteria from the pasted Claude guide:")
     print("  overseas IP, stable country/region, no frequent auto-switching, risk score below 20%, shared users <= 10 when the site reports it")
-    print("- also record PWR telemetry fingerprint warnings when a browser check reports them; store only verdict/risk, not raw telemetry payloads")
+    print("- also record PWR fingerprint warnings when a browser check reports them; store only verdict/risk, not raw PWR detection payloads")
     print("- ping0.cc can be used as a reference only; do not treat it as the deciding signal")
 
 

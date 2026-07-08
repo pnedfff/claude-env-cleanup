@@ -16,7 +16,7 @@
 - 删除 CC Switch app、cask、`~/.cc-switch` 状态
 - 监测 Claude 网络环境：IP 纯净度、DNS 泄露、WebRTC 泄露、节点地区稳定性
 - Claude 账号被封后的三步自查：清浏览器 Cookie/站点数据、删除 CC Switch、检查 Claude Code 终端和桌面 App
-- 生成本机脱敏环境基线：时区、语言、出口地区、DNS、ASN、WebRTC 与 PWR 遥测指纹结论
+- 生成本机脱敏环境基线：时区、语言、出口地区、DNS、ASN、WebRTC 与 PWR 指纹结论
 - 开启官方 Claude Code 隐私控制：telemetry、error reporting、feedback、survey、nonessential traffic
 - 梳理新账号早期使用和指纹重置 takeaways
 - 检查 browser fingerprint 相关信号，例如系统时区、`Intl` locale、浏览器语言、中文字体探测
@@ -67,7 +67,7 @@ python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_network_env.py --post-b
 ~/.claude/session-env/environment-fingerprint-profile.md
 ```
 
-这份文件只应保存地区、时区、语言、代理本地端口、DNS 摘要、ASN/服务商、WebRTC 结论、PWR 遥测指纹风险结论等信息；不要保存完整公网 IP、局域网 IP、网关、Tailnet 地址、精确 WebRTC candidate、PWR 原始遥测 payload、Cookie、token 或密钥。
+这份文件只应保存地区、时区、语言、代理本地端口、DNS 摘要、ASN/服务商、WebRTC 结论、PWR 指纹风险结论等信息；不要保存完整公网 IP、局域网 IP、网关、Tailnet 地址、精确 WebRTC candidate、PWR 原始检测 payload、Cookie、token 或密钥。
 
 ### 官方隐私控制
 
@@ -164,7 +164,7 @@ Its default posture is: **audit first, mutate only when explicitly asked, back u
 - Remove CC Switch app, cask, and `~/.cc-switch` state
 - Monitor Claude network environment: IP purity, DNS leaks, WebRTC leaks, and node-region stability
 - Run a post-ban three-step self-check: clear browser cookies/site data, remove CC Switch, and inspect Claude Code plus Claude Desktop
-- Generate a sanitized local environment baseline: timezone, language, exit region, DNS, ASN, WebRTC, and PWR telemetry fingerprint verdicts
+- Generate a sanitized local environment baseline: timezone, language, exit region, DNS, ASN, WebRTC, and PWR fingerprint verdicts
 - Enable official Claude Code privacy controls for telemetry, error reporting, feedback, surveys, and nonessential traffic
 - Summarize early-account usage and fingerprint-reset takeaways
 - Inspect browser fingerprint signals such as system timezone, `Intl` locale, browser language, and installed Chinese fonts
@@ -215,7 +215,7 @@ For a reusable local environment baseline, store the sanitized profile at:
 ~/.claude/session-env/environment-fingerprint-profile.md
 ```
 
-The profile should keep region, timezone, languages, local proxy ports, DNS summary, ASN/provider, WebRTC verdicts, and PWR telemetry fingerprint risk verdicts only. Do not store full public IPs, LAN IPs, gateways, tailnet addresses, exact WebRTC candidates, raw PWR telemetry payloads, cookies, tokens, or secrets.
+The profile should keep region, timezone, languages, local proxy ports, DNS summary, ASN/provider, WebRTC verdicts, and PWR fingerprint risk verdicts only. Do not store full public IPs, LAN IPs, gateways, tailnet addresses, exact WebRTC candidates, raw PWR detection payloads, cookies, tokens, or secrets.
 
 ### Official Privacy Controls
 

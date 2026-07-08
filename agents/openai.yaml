@@ -1,4 +1,4 @@
 interface:
   display_name: "Coding Agent Cleanup"
   short_description: "Audit Claude routes, privacy controls, fingerprint reset, network, PWR, and environment fingerprints"
-  default_prompt: "Use $claude-env-cleanup to audit Claude/Codex routing, official Claude privacy controls, fingerprint-reset readiness, post-ban browser cleanup targets, CC Switch leftovers, DNS/WebRTC leaks, PWR telemetry fingerprints, IP purity, environment fingerprint baselines, browser bridge residue, and locale/font signals before safe cleanup."
+  default_prompt: "Use $claude-env-cleanup to audit Claude/Codex routing, official Claude privacy controls, fingerprint-reset readiness, post-ban browser cleanup targets, CC Switch leftovers, DNS/WebRTC leaks, PWR fingerprint signals, IP purity, environment fingerprint baselines, browser bridge residue, and locale/font signals before safe cleanup."
