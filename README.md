@@ -16,7 +16,7 @@
 - 删除 CC Switch app、cask、`~/.cc-switch` 状态
 - 监测 Claude 网络环境：IP 纯净度、DNS 泄露、WebRTC 泄露、节点地区稳定性
 - Claude 账号被封后的三步自查：清浏览器 Cookie/站点数据、删除 CC Switch、检查 Claude Code 终端和桌面 App
-- 生成本机脱敏环境基线：时区、语言、出口地区、DNS、ASN、WebRTC 结论
+- 生成本机脱敏环境基线：时区、语言、出口地区、DNS、ASN、WebRTC 与 PWR 遥测指纹结论
 - 检查 browser fingerprint 相关信号，例如系统时区、`Intl` locale、浏览器语言、中文字体探测
 - 审计 coding-agent 配置中的路由覆盖、请求改写、权限绕过和高风险本地网关设置
 
@@ -63,7 +63,7 @@ python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_network_env.py --post-b
 ~/.claude/session-env/environment-fingerprint-profile.md
 ```
 
-这份文件只应保存地区、时区、语言、代理本地端口、DNS 摘要、ASN/服务商、WebRTC 结论等信息；不要保存完整公网 IP、局域网 IP、网关、Tailnet 地址、精确 WebRTC candidate、Cookie、token 或密钥。
+这份文件只应保存地区、时区、语言、代理本地端口、DNS 摘要、ASN/服务商、WebRTC 结论、PWR 遥测指纹风险结论等信息；不要保存完整公网 IP、局域网 IP、网关、Tailnet 地址、精确 WebRTC candidate、PWR 原始遥测 payload、Cookie、token 或密钥。
 
 Codex 可以自动做：
 
@@ -75,7 +75,7 @@ Codex 可以自动做：
 用户需要手动做：
 
 - 确认候选档案准确，确认后才标记为“用户确认过的本机环境基线”。
-- 用真实浏览器打开 `ip.net.coffee/claude`、`ippure.com/claude`、`iplark.com`，确认 DNS/WebRTC/IP 风险。
+- 用真实浏览器打开 `ip.net.coffee/claude`、`ippure.com/claude`、`iplark.com`，确认 DNS/WebRTC/PWR/IP 风险。
 - 改过时区、语言、代理、扩展或 Cookie 后，手动重启浏览器。
 - 明确授权后才删除 Cookie、Local Storage、IndexedDB、扩展、浏览器 profile、Claude App、Claude Code 或 CC Switch。
 
@@ -116,7 +116,7 @@ Its default posture is: **audit first, mutate only when explicitly asked, back u
 - Remove CC Switch app, cask, and `~/.cc-switch` state
 - Monitor Claude network environment: IP purity, DNS leaks, WebRTC leaks, and node-region stability
 - Run a post-ban three-step self-check: clear browser cookies/site data, remove CC Switch, and inspect Claude Code plus Claude Desktop
-- Generate a sanitized local environment baseline: timezone, language, exit region, DNS, ASN, and WebRTC verdicts
+- Generate a sanitized local environment baseline: timezone, language, exit region, DNS, ASN, WebRTC, and PWR telemetry fingerprint verdicts
 - Inspect browser fingerprint signals such as system timezone, `Intl` locale, browser language, and installed Chinese fonts
 - Audit coding-agent config for route overrides, request rewriting, permission bypasses, and risky local gateway settings
 
@@ -163,7 +163,7 @@ For a reusable local environment baseline, store the sanitized profile at:
 ~/.claude/session-env/environment-fingerprint-profile.md
 ```
 
-The profile should keep region, timezone, languages, local proxy ports, DNS summary, ASN/provider, and WebRTC verdicts only. Do not store full public IPs, LAN IPs, gateways, tailnet addresses, exact WebRTC candidates, cookies, tokens, or secrets.
+The profile should keep region, timezone, languages, local proxy ports, DNS summary, ASN/provider, WebRTC verdicts, and PWR telemetry fingerprint risk verdicts only. Do not store full public IPs, LAN IPs, gateways, tailnet addresses, exact WebRTC candidates, raw PWR telemetry payloads, cookies, tokens, or secrets.
 
 Codex can automatically:
 
@@ -175,7 +175,7 @@ Codex can automatically:
 The user must manually:
 
 - Confirm the candidate before it is treated as a user-confirmed local baseline.
-- Open `ip.net.coffee/claude`, `ippure.com/claude`, and `iplark.com` in the real browser for DNS/WebRTC/IP-risk verdicts.
+- Open `ip.net.coffee/claude`, `ippure.com/claude`, and `iplark.com` in the real browser for DNS/WebRTC/PWR/IP-risk verdicts.
 - Restart the browser after timezone, language, proxy, extension, or cookie changes.
 - Explicitly approve deletion of cookies, Local Storage, IndexedDB, extensions, browser profiles, Claude App, Claude Code, or CC Switch.
 
