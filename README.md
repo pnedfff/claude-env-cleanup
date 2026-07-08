@@ -17,6 +17,7 @@
 - 监测 Claude 网络环境：IP 纯净度、DNS 泄露、WebRTC 泄露、节点地区稳定性
 - Claude 账号被封后的三步自查：清浏览器 Cookie/站点数据、删除 CC Switch、检查 Claude Code 终端和桌面 App
 - 生成本机脱敏环境基线：时区、语言、出口地区、DNS、ASN、WebRTC 与 PWR 遥测指纹结论
+- 梳理新账号早期使用和指纹重置 takeaways
 - 检查 browser fingerprint 相关信号，例如系统时区、`Intl` locale、浏览器语言、中文字体探测
 - 审计 coding-agent 配置中的路由覆盖、请求改写、权限绕过和高风险本地网关设置
 
@@ -79,6 +80,18 @@ Codex 可以自动做：
 - 改过时区、语言、代理、扩展或 Cookie 后，手动重启浏览器。
 - 明确授权后才删除 Cookie、Local Storage、IndexedDB、扩展、浏览器 profile、Claude App、Claude Code 或 CC Switch。
 
+### 新账号和指纹重置 takeaways
+
+这些是经验性稳定使用建议，不保证消除账号风险：
+
+- 新账号前两周优先使用官方 Claude Desktop/App 路径，避免独立 CLI。
+- 新账号阶段不要使用 OpenCode、OpenClaw、CraftAgent 等第三方客户端。
+- 账号要有作息，不要 24 小时持续高负载。
+- IP 类型不是唯一重点；避免万人共用的公共代理，早期不要频繁切换 IP、地区或 ASN。
+- 不共享账号。
+- 被封后换账号前，指纹重置是重点：清理浏览器站点数据、扩展、Native Messaging、Claude App/Code 残留、CC Switch、本地 auth/config/cache/log/telemetry 残留，并重新做浏览器侧检测。
+- 养号期可按约一个月或首次续费后理解，之后再逐步放松限制。
+
 ### 安全边界
 
 - 默认不删除任何东西。
@@ -117,6 +130,7 @@ Its default posture is: **audit first, mutate only when explicitly asked, back u
 - Monitor Claude network environment: IP purity, DNS leaks, WebRTC leaks, and node-region stability
 - Run a post-ban three-step self-check: clear browser cookies/site data, remove CC Switch, and inspect Claude Code plus Claude Desktop
 - Generate a sanitized local environment baseline: timezone, language, exit region, DNS, ASN, WebRTC, and PWR telemetry fingerprint verdicts
+- Summarize early-account usage and fingerprint-reset takeaways
 - Inspect browser fingerprint signals such as system timezone, `Intl` locale, browser language, and installed Chinese fonts
 - Audit coding-agent config for route overrides, request rewriting, permission bypasses, and risky local gateway settings
 
@@ -178,6 +192,18 @@ The user must manually:
 - Open `ip.net.coffee/claude`, `ippure.com/claude`, and `iplark.com` in the real browser for DNS/WebRTC/PWR/IP-risk verdicts.
 - Restart the browser after timezone, language, proxy, extension, or cookie changes.
 - Explicitly approve deletion of cookies, Local Storage, IndexedDB, extensions, browser profiles, Claude App, Claude Code, or CC Switch.
+
+### Early-Account and Fingerprint-Reset Takeaways
+
+These are operational stability heuristics, not a guarantee that account risk is eliminated:
+
+- For the first two weeks, prefer the official Claude Desktop/App path and avoid standalone CLI use.
+- During the early account phase, avoid third-party clients such as OpenCode, OpenClaw, and CraftAgent.
+- Keep a human-like work/rest rhythm; avoid continuous 24-hour high-load use.
+- IP type is not the only signal; avoid crowded public proxies and avoid frequent IP, country, or ASN switching early on.
+- Do not share accounts.
+- After a ban, fingerprint reset is the key step before using a new account: clear browser site data, extensions, Native Messaging, Claude App/Code residue, CC Switch, local auth/config/cache/log/telemetry residue, then re-check in the real browser.
+- Treat the warm-up period as roughly one month or after the first renewal, then relax constraints gradually.
 
 ### Safety Boundaries
 

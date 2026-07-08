@@ -1,6 +1,6 @@
 ---
 name: claude-env-cleanup
-description: Audit, clean, and when explicitly requested uninstall local Claude Code, Claude Desktop/PWA, Anthropic browser bridges/extensions, auth/config residue, CC Switch app/data/routes, Claude network signals, DNS/WebRTC leaks, browser locale/timezone/font signals, PWR telemetry fingerprint, environment fingerprint baseline, and coding-agent config risks on Kevin's Mac while preserving Teamo Code and Claude-to-IM by default. Use for "Claude 环境清理", "清理 Claude 残留", "Claude 封号", "被封账号后", "封号自查", "清除浏览器 Cookie", "本地 coding agent 配置清理", "网络环境监测", "环境指纹档案", "PWR 遥测指纹", "Claude 网络检测", "DNS 泄露", "WebRTC 泄露", "IP 纯净度", "节点地区稳定", "卸载 Claude", "删除官方 Claude App", "删除 Claude Code", "CC Switch 可以删掉", "删除 CC Switch", "ANTHROPIC_*", "127.0.0.1:15721", "系统时区", "Asia/Singapore", "浏览器语言", "Intl 区域设置", "已安装中文字体", "canvas 字体探测", or when a Claude artifact may be a CLI, app, LaunchAgent, proxy, browser bridge, or config needing backup-first inspection and cleanup.
+description: Audit, clean, and when explicitly requested uninstall local Claude Code, Claude Desktop/PWA, Anthropic browser bridges/extensions, auth/config residue, CC Switch app/data/routes, Claude network signals, DNS/WebRTC leaks, browser locale/timezone/font signals, PWR telemetry fingerprint, environment fingerprint baseline, and coding-agent config risks on Kevin's Mac while preserving Teamo Code and Claude-to-IM by default. Use for "Claude 环境清理", "清理 Claude 残留", "Claude 封号", "被封账号后", "封号自查", "指纹重置", "养号期", "清除浏览器 Cookie", "本地 coding agent 配置清理", "网络环境监测", "环境指纹档案", "PWR 遥测指纹", "Claude 网络检测", "DNS 泄露", "WebRTC 泄露", "IP 纯净度", "节点地区稳定", "卸载 Claude", "删除官方 Claude App", "删除 Claude Code", "CC Switch 可以删掉", "删除 CC Switch", "ANTHROPIC_*", "127.0.0.1:15721", "系统时区", "Asia/Singapore", "浏览器语言", "已安装中文字体", "canvas 字体探测", or when a Claude artifact may be a CLI, app, LaunchAgent, proxy, browser bridge, or config needing backup-first inspection and cleanup.
 ---
 
 # Claude Env Cleanup
@@ -86,9 +86,11 @@ For a reusable local environment baseline, create or read `~/.claude/session-env
 
 7. If the user asks what the local timezone, exit region, DNS, IP, WebRTC, PWR telemetry fingerprint, browser language, or environment fingerprint baseline is, use the "Environment Fingerprint Profile" pattern. Prefer a user-confirmed sanitized baseline first, then run live checks only when freshness matters.
 
-8. If the user says an account was banned, asks what to do after a ban, or asks to clear browser cookies, remove CC Switch, and re-check Claude App/Code, use the "Post-Ban Account Reset Self-Check" pattern. Keep it audit-first, make manual cookie/site-data actions highly visible, and do not perform destructive browser cleanup unless explicitly requested.
+8. If the user asks for new-account usage takeaways, account warm-up, "养号期", or "指纹重置", use the "Account Stability and Fingerprint Reset Takeaways" pattern. Present these as operational stability heuristics, not as a guarantee that account risk is eliminated.
 
-9. If the user calls something a Claude "skill" but it may be an installed artifact, verify the artifact class first:
+9. If the user says an account was banned, asks what to do after a ban, or asks to clear browser cookies, remove CC Switch, and re-check Claude App/Code, use the "Post-Ban Account Reset Self-Check" pattern. Keep it audit-first, make manual cookie/site-data actions highly visible, and do not perform destructive browser cleanup unless explicitly requested.
+
+10. If the user calls something a Claude "skill" but it may be an installed artifact, verify the artifact class first:
    - skill folder
    - global npm or Homebrew CLI
    - app bundle
@@ -98,11 +100,11 @@ For a reusable local environment baseline, create or read `~/.claude/session-env
 
 Then clean the actual artifact class, not the label the user guessed.
 
-10. If the user explicitly asks to delete official Claude App or Claude Code itself, use the "Uninstall Official Claude App and Claude Code" pattern below. This is a broader uninstall than route cleanup; include app bundles, package-manager installs, binaries, LaunchAgents, updater jobs, app support data, caches, preferences, saved state, and logs where present.
+11. If the user explicitly asks to delete official Claude App or Claude Code itself, use the "Uninstall Official Claude App and Claude Code" pattern below. This is a broader uninstall than route cleanup; include app bundles, package-manager installs, binaries, LaunchAgents, updater jobs, app support data, caches, preferences, saved state, and logs where present.
 
-11. If Teamo or `com.claude-to-im.bridge` is mentioned, run a preservation check before and after cleanup: verify `teamo` still resolves, `~/.teamo` still exists, `~/.claude/projects` is not removed, and the bridge is still present/running when it was intentionally preserved.
+12. If Teamo or `com.claude-to-im.bridge` is mentioned, run a preservation check before and after cleanup: verify `teamo` still resolves, `~/.teamo` still exists, `~/.claude/projects` is not removed, and the bridge is still present/running when it was intentionally preserved.
 
-12. If the user asks to clean local coding-agent configs based on request-chain trust rules, audit for four categories:
+13. If the user asks to clean local coding-agent configs based on request-chain trust rules, audit for four categories:
    - provider route overrides: `ANTHROPIC_BASE_URL`, `OPENAI_BASE_URL`, `api_base_url`, `baseUrl`, local proxy ports, third-party routers
    - request rewriting surfaces: Claude Code Router, provider transformers, gateway adapters, custom system-prompt/status-line commands
    - permission bypasses: `bypassPermissions`, skipped dangerous-mode prompts, unsafe host-header fallback
@@ -298,6 +300,31 @@ The user must manually perform or confirm these steps:
 5. Approve any write to global Claude/Codex instruction files outside this profile path.
 6. Approve any destructive cleanup, including deleting cookies, Local Storage, IndexedDB, browser extensions, browser profiles, Claude App, Claude Code, or CC Switch.
 
+### Account Stability and Fingerprint Reset Takeaways
+
+Use when the user asks how to reduce operational risk for a new Claude account, after a ban, or during an early account warm-up period. Treat these as user-provided stability heuristics and practical reminders, not as a bypass guarantee.
+
+1. New-account early period:
+   - For the first two weeks, use only the official Claude Desktop/App path and avoid standalone CLI use when following this strategy.
+   - Do not use third-party clients such as OpenCode, OpenClaw, CraftAgent, or other unofficial wrappers during the early account phase.
+   - Prefer platform subscription channels such as App Store or Google Play when the user explicitly asks for purchase-channel guidance; do not store payment details.
+   - Start from the basic Pro tier and upgrade naturally after usage history exists; avoid abrupt heavy-tier behavior.
+   - After upgrading to Max, keep the first two weeks conservative and avoid repeatedly hitting usage limits. If summarizing the user's heuristic, say "no more than about 3 limit hits" rather than treating it as an official threshold.
+2. Usage rhythm:
+   - Encourage a human-like work/rest rhythm; avoid continuous 24-hour high-load automation.
+   - Do not share accounts. Shared use mixes devices, regions, browser fingerprints, and usage rhythms.
+3. Network posture:
+   - IP type is less important than stability and crowding. Avoid public, overused shared proxies.
+   - In the early period, avoid frequent IP/country/ASN switching.
+4. Fingerprint reset is the key post-ban step:
+   - Before changing to a new account after a ban, complete the post-ban cleanup flow: browser site data, Claude extensions, Native Messaging manifests, official Claude App/Code residue, CC Switch, local auth/config/cache/log/telemetry residue, and browser-side network checks.
+   - Treat `~/.claude/telemetry`, app caches, browser storage, Native Messaging, and third-party client configs as part of the fingerprint surface when the user asks for a reset.
+   - Verify before reuse; do not assume uninstalling one app removed the whole fingerprint surface.
+5. Warm-up window:
+   - If the user asks for a timeframe, present the user's heuristic as about one month or after the first renewal, then relax constraints gradually.
+
+Codex can automatically help by auditing local residue, checking active routes, listing third-party client configs, generating a sanitized environment baseline, and removing files only after explicit permission plus backup. The user must manually choose subscription channel, usage rhythm, account sharing behavior, browser-page verdicts, and whether to follow the early-period usage limits.
+
 ### Post-Ban Account Reset Self-Check
 
 Use when the user says a Claude account was banned and asks for the three-step reset: clear browser cookies, remove CC Switch, and check/remove Claude Code terminal plus Claude Desktop App. This workflow is audit-first; it can identify cleanup targets, but cookie/site-data clearing and in-browser extension removal are manual unless Kevin explicitly requests destructive browser-data edits.
@@ -331,6 +358,7 @@ Use when the user says a Claude account was banned and asks for the three-step r
    - manual action required
    - destructive cleanup performed with backup paths
    - remaining risks before using a new account
+7. If the user says "指纹重置", treat it as the priority outcome: the local Claude/browser/client fingerprint surface should be clean or intentionally documented before the new account is used.
 
 ### Claude Network Environment Monitoring
 
