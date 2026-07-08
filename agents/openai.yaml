@@ -1,4 +1,4 @@
 interface:
   display_name: "Coding Agent Cleanup"
-  short_description: "Audit Claude routes, post-ban cleanup, network, and browser signals"
-  default_prompt: "Use $claude-env-cleanup to audit Claude/Codex routing, post-ban browser cleanup targets, CC Switch leftovers, DNS/WebRTC leaks, IP purity, browser bridge residue, and locale/font signals before safe cleanup."
+  short_description: "Audit Claude routes, post-ban cleanup, network, and environment fingerprints"
+  default_prompt: "Use $claude-env-cleanup to audit Claude/Codex routing, post-ban browser cleanup targets, CC Switch leftovers, DNS/WebRTC leaks, IP purity, environment fingerprint baselines, browser bridge residue, and locale/font signals before safe cleanup."

@@ -1,6 +1,6 @@
 ---
 name: claude-env-cleanup
-description: Audit, clean, and when explicitly requested uninstall local Claude Code, Claude Desktop/PWA, Anthropic browser bridges/extensions, auth/config residue, CC Switch app/data/routes, Claude network signals, DNS/WebRTC leaks, browser locale/timezone/font signals, and coding-agent config risks on Kevin's Mac while preserving Teamo Code and Claude-to-IM by default. Use for "Claude 环境清理", "清理 Claude 残留", "Claude 封号", "被封账号后", "封号自查", "清除浏览器 Cookie", "本地 coding agent 配置清理", "网络环境监测", "Claude 网络检测", "DNS 泄露", "WebRTC 泄露", "IP 纯净度", "节点地区稳定", "卸载 Claude", "删除官方 Claude App", "删除 Claude Code", "CC Switch 可以删掉", "删除 CC Switch", "ANTHROPIC_*", "127.0.0.1:15721", "系统时区", "Asia/Singapore", "浏览器语言", "Intl 区域设置", "已安装中文字体", "canvas 字体探测", or when a Claude artifact may be a CLI, app, LaunchAgent, proxy, browser bridge, or config needing backup-first inspection and cleanup.
+description: Audit, clean, and when explicitly requested uninstall local Claude Code, Claude Desktop/PWA, Anthropic browser bridges/extensions, auth/config residue, CC Switch app/data/routes, Claude network signals, DNS/WebRTC leaks, browser locale/timezone/font signals, environment fingerprint baseline, and coding-agent config risks on Kevin's Mac while preserving Teamo Code and Claude-to-IM by default. Use for "Claude 环境清理", "清理 Claude 残留", "Claude 封号", "被封账号后", "封号自查", "清除浏览器 Cookie", "本地 coding agent 配置清理", "网络环境监测", "环境指纹档案", "environment-fingerprint-profile", "Claude 网络检测", "DNS 泄露", "WebRTC 泄露", "IP 纯净度", "节点地区稳定", "卸载 Claude", "删除官方 Claude App", "删除 Claude Code", "CC Switch 可以删掉", "删除 CC Switch", "ANTHROPIC_*", "127.0.0.1:15721", "系统时区", "Asia/Singapore", "浏览器语言", "Intl 区域设置", "已安装中文字体", "canvas 字体探测", or when a Claude artifact may be a CLI, app, LaunchAgent, proxy, browser bridge, or config needing backup-first inspection and cleanup.
 ---
 
 # Claude Env Cleanup
@@ -22,6 +22,8 @@ For browser locale, timezone, and font signal work, report consistency facts and
 For Claude network environment monitoring, prefer browser-visible facts for DNS/WebRTC/IP quality. Local command output is useful for proxy, route, resolver, and history checks, but DNS leak verdicts should be based on browser-side detection whenever possible. Do not open a large battery of sites by default; use only the three core manual checks listed below unless the user asks for more.
 
 Browser cookie and site-data cleanup is a manual, high-blast-radius step. In post-ban workflows, report the relevant browser profile targets and give clear manual steps. Do not delete Chromium/Safari cookie databases, Local Storage, IndexedDB, Service Worker data, cache folders, or whole browser profiles unless Kevin explicitly requests destructive browser-data cleanup and confirms the scope.
+
+For environment fingerprint profiles, store only a sanitized local baseline by default. Keep region, timezone, locale/languages, proxy local ports, DNS resolver summary, ASN/provider, and WebRTC verdicts. Redact or omit raw public IPs, LAN IPs, gateways, tailnet addresses, mDNS candidate values, browser profile names, cookie contents, tokens, and secrets. Do not commit user-specific profile files to a public skill repo.
 
 ## Quick Audit
 
@@ -57,6 +59,8 @@ For a banned-account recovery self-check, add `--post-ban` so the audit prints b
 python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_network_env.py --post-ban
 ```
 
+For a reusable local environment baseline, create or read `~/.claude/session-env/environment-fingerprint-profile.md`. When answering from that file, say it is the user-confirmed local baseline and include its date before deciding whether a live re-check is needed.
+
 ## Decision Flow
 
 1. If the user only asks whether Claude leftovers exist, run audit-only and summarize:
@@ -80,9 +84,11 @@ python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_network_env.py --post-b
 
 6. If the user asks about Claude network environment, IP purity, DNS leak, WebRTC leak, or node stability, use the "Claude Network Environment Monitoring" pattern. Prefer current browser results from the three core sites over command-line-only conclusions.
 
-7. If the user says an account was banned, asks what to do after a ban, or asks to clear browser cookies, remove CC Switch, and re-check Claude App/Code, use the "Post-Ban Account Reset Self-Check" pattern. Keep it audit-first, make manual cookie/site-data actions highly visible, and do not perform destructive browser cleanup unless explicitly requested.
+7. If the user asks what the local timezone, exit region, DNS, IP, WebRTC, browser language, or environment fingerprint baseline is, use the "Environment Fingerprint Profile" pattern. Prefer a user-confirmed sanitized baseline first, then run live checks only when freshness matters.
 
-8. If the user calls something a Claude "skill" but it may be an installed artifact, verify the artifact class first:
+8. If the user says an account was banned, asks what to do after a ban, or asks to clear browser cookies, remove CC Switch, and re-check Claude App/Code, use the "Post-Ban Account Reset Self-Check" pattern. Keep it audit-first, make manual cookie/site-data actions highly visible, and do not perform destructive browser cleanup unless explicitly requested.
+
+9. If the user calls something a Claude "skill" but it may be an installed artifact, verify the artifact class first:
    - skill folder
    - global npm or Homebrew CLI
    - app bundle
@@ -92,11 +98,11 @@ python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_network_env.py --post-b
 
 Then clean the actual artifact class, not the label the user guessed.
 
-9. If the user explicitly asks to delete official Claude App or Claude Code itself, use the "Uninstall Official Claude App and Claude Code" pattern below. This is a broader uninstall than route cleanup; include app bundles, package-manager installs, binaries, LaunchAgents, updater jobs, app support data, caches, preferences, saved state, and logs where present.
+10. If the user explicitly asks to delete official Claude App or Claude Code itself, use the "Uninstall Official Claude App and Claude Code" pattern below. This is a broader uninstall than route cleanup; include app bundles, package-manager installs, binaries, LaunchAgents, updater jobs, app support data, caches, preferences, saved state, and logs where present.
 
-10. If Teamo or `com.claude-to-im.bridge` is mentioned, run a preservation check before and after cleanup: verify `teamo` still resolves, `~/.teamo` still exists, `~/.claude/projects` is not removed, and the bridge is still present/running when it was intentionally preserved.
+11. If Teamo or `com.claude-to-im.bridge` is mentioned, run a preservation check before and after cleanup: verify `teamo` still resolves, `~/.teamo` still exists, `~/.claude/projects` is not removed, and the bridge is still present/running when it was intentionally preserved.
 
-11. If the user asks to clean local coding-agent configs based on request-chain trust rules, audit for four categories:
+12. If the user asks to clean local coding-agent configs based on request-chain trust rules, audit for four categories:
    - provider route overrides: `ANTHROPIC_BASE_URL`, `OPENAI_BASE_URL`, `api_base_url`, `baseUrl`, local proxy ports, third-party routers
    - request rewriting surfaces: Claude Code Router, provider transformers, gateway adapters, custom system-prompt/status-line commands
    - permission bypasses: `bypassPermissions`, skipped dangerous-mode prompts, unsafe host-header fallback
@@ -152,6 +158,7 @@ Treat these as the high-yield inspection points:
 - listener on `127.0.0.1:15721`
 - locale/timezone and browser-signal checks: `/etc/localtime`, `systemsetup -gettimezone` when sudo is available, `date`, browser language/locale settings, `~/Library/Fonts`, `/Library/Fonts`, and macOS system font locations
 - network environment checks: `scutil --proxy`, `scutil --dns`, `route -n get default`, watched proxy ports such as `7890`, `7892`, `1080`, `8080`, `8888`, and browser-visible public IP/DNS/WebRTC checks
+- sanitized local environment baseline: `~/.claude/session-env/environment-fingerprint-profile.md`
 
 Route residue indicators include `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_API_KEY`, `ANTHROPIC_BASE_URL`, `ANTHROPIC_MODEL`, `ANTHROPIC_MODEL_NAME`, `OPENAI_BASE_URL`, `PROXY_MANAGED`, `127.0.0.1:15721`, `302ai-claude-code`, `claude-official`, `api.302.ai`, `glm-5.2`, `proxy_live_backup`, `claude-code-router`, `openrouter`, `anyrouter`, `api.deepseek.com`, `open.bigmodel.cn`, `teamocode.com`, and `code.newcli.com`.
 
@@ -256,6 +263,40 @@ Use when the user is comparing local browser/system signals such as `Intl.DateTi
    - Do not delete macOS system fonts or protected assets. PingFang, Hiragino Sans GB, STHeiti, and Songti/STSong are expected macOS signals and can remain detectable even after user fonts are removed.
 3. Browser language and `Intl` locale are separate from system timezone and fonts. Treat them as browser/profile settings, not font cleanup.
 4. Be honest about limits: normal Chrome on macOS cannot fully hide system font availability; a clean browser profile, anti-fingerprinting browser, VM, or remote environment may be needed for a different fingerprint.
+
+### Environment Fingerprint Profile
+
+Use when the user wants a reusable local baseline for questions such as "本机时区是什么", "出口/DNS/IP/WebRTC 是什么", or "按本机环境指纹汇总". This profile is for local Claude/Codex context, not for public repo publishing.
+
+1. Generate the candidate from read-only sources:
+   - `python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_network_env.py`
+   - Add `--external` only when public-IP and Claude reachability probes are appropriate.
+   - Prefer browser-side checks for DNS/WebRTC verdicts.
+2. Sanitize before writing a profile:
+   - Keep: country/region, timezone, IANA browser timezone, macOS locale/languages, browser language summary, local proxy ports, DNS resolver summary, network interface label, ASN/provider, IP version presence, and WebRTC verdicts.
+   - Redact or omit: full public IPv4/IPv6 values, LAN IP, gateway, tailnet IPs, exact mDNS host candidates, browser profile names, cookie/storage contents, tokens, OAuth values, API keys, and raw config secrets.
+3. Store the sanitized profile at `~/.claude/session-env/environment-fingerprint-profile.md` unless the user specifies another local-only path.
+4. When answering from this profile, say: "这是用户确认过的本机环境基线", include the confirmation date, and explain that IP/DNS/WebRTC can drift.
+5. If live checks differ from the stored baseline, report the diff and ask before overwriting the baseline.
+6. Never commit a user-specific baseline profile to the public skill repository; only commit the generic procedure.
+
+Codex can automatically perform these read-only or low-risk setup steps after the user asks for an environment profile:
+
+1. Run local audits for timezone, macOS locale, browser language preferences, proxy settings, system DNS, default route, watched proxy ports, and Claude reachability probes.
+2. Create the local folder `~/.claude/session-env/` when missing.
+3. Write a sanitized candidate profile to `~/.claude/session-env/environment-fingerprint-profile.md`.
+4. Redact raw public IPs, LAN IPs, gateway addresses, tailnet addresses, exact WebRTC candidates, browser profile names, and secrets before writing.
+5. Re-read the written file and check that it contains no obvious raw IP or secret values.
+6. Report the candidate as "待用户确认" until the user explicitly confirms it.
+
+The user must manually perform or confirm these steps:
+
+1. Confirm that the sanitized profile is accurate before it is treated as "用户确认过的本机环境基线".
+2. Open browser-only checks such as `ip.net.coffee/claude`, `ippure.com/claude`, and `iplark.com` when DNS/WebRTC/IP risk must reflect the real browser, not the terminal.
+3. Provide screenshots or page verdicts for browser-only values that automation cannot reliably read.
+4. Restart browsers after timezone, language, proxy, extension, or cookie changes before trusting the baseline.
+5. Approve any write to global Claude/Codex instruction files outside this profile path.
+6. Approve any destructive cleanup, including deleting cookies, Local Storage, IndexedDB, browser extensions, browser profiles, Claude App, Claude Code, or CC Switch.
 
 ### Post-Ban Account Reset Self-Check
 
@@ -374,6 +415,7 @@ After edits, verify with targeted checks:
 - coding-agent active configs no longer contain stale router endpoints, permission-bypass defaults, or unsafe Host Header fallback unless intentionally preserved
 - `/etc/localtime` points to the intended timezone after timezone changes
 - `~/Library/Fonts` user-installed fonts are absent or intentionally present after font-signal tests
+- environment fingerprint profile is sanitized before being stored, does not contain raw public IPs, LAN/gateway/tailnet addresses, exact WebRTC candidates, browser profile names, cookies, tokens, or secrets
 - post-ban self-check reports browser cookie/site-data targets, makes manual browser cleanup actions explicit, confirms CC Switch state, confirms official Claude App/Code state, and records the five guide-site verdicts
 - network audit reports expected proxy/DNS/default-route state, browser checks show no DNS/WebRTC leak, and history does not show unintended country/ASN drift when monitoring is enabled
 - for app/CLI/browser-bridge uninstall, `/Applications/Claude.app`, `~/Applications/Chrome Apps.localized/Claude.app`, and `~/Applications/Claude Code URL Handler.app` are absent, `which -a claude` finds nothing, `npm list -g --depth=0` and `~/.npm/_npx` have no `@anthropic-ai/claude-code`, `~/Library/Caches/claude-cli-nodejs` is absent, Anthropic Native Messaging manifests are absent, Claude browser extension IDs are absent or intentionally preserved, and no official Claude process remains
