@@ -30,7 +30,6 @@ CODING_AGENT_CONFIGS = [
     HOME / ".claude" / "settings.local.json",
     HOME / ".claude.json",
     HOME / ".codex" / "config.toml",
-    HOME / ".teamo" / "settings.json",
     HOME / ".cc-switch" / "settings.json",
     HOME / ".claude-code-router" / "config.json",
     HOME / ".cursor" / "mcp.json",
@@ -38,9 +37,6 @@ CODING_AGENT_CONFIGS = [
     HOME / ".gemini" / "config" / "mcp_config.json",
     HOME / ".gemini" / "antigravity" / "mcp_config.json",
     HOME / ".kiro" / "settings" / "cli.json",
-    HOME / ".openclaw-lan-u1" / "openclaw.json",
-    HOME / ".openclaw-lan-u2" / "openclaw.json",
-    HOME / ".openclaw-lan-u3" / "openclaw.json",
     HOME / ".claude-sync" / "config.json",
 ]
 
@@ -98,13 +94,6 @@ CLAUDE_CHROME_EXTENSION_IDS = [
     "fcoeoabgfenejglbffodgkkbkcdhcgfn",
     "dihbgbndebgnbjfmelmegjepbnkhlgni",
     "dngcpimnedloihjnnfngkgjoidhnaolf",
-]
-
-TEAMO_PATHS = [
-    pathlib.Path("/opt/homebrew/bin/teamo"),
-    pathlib.Path("/usr/local/bin/teamo"),
-    HOME / ".teamo",
-    HOME / ".claude" / "projects",
 ]
 
 CC_SWITCH_PATHS = [
@@ -187,7 +176,6 @@ MARKERS = [
     "anyrouter",
     "api.deepseek.com",
     "open.bigmodel.cn",
-    "teamocode.com",
     "code.newcli.com",
     "bypassPermissions",
     "skipDangerousModePermissionPrompt",
@@ -440,11 +428,7 @@ def scan_coding_agent_configs() -> None:
 
     auth_files = [
         HOME / ".codex" / "auth.json",
-        HOME / ".teamo" / "auth.json",
         HOME / ".gemini" / "oauth_creds.json",
-        HOME / ".openclaw-lan-u1" / "identity" / "device-auth.json",
-        HOME / ".openclaw-lan-u2" / "identity" / "device-auth.json",
-        HOME / ".openclaw-lan-u3" / "identity" / "device-auth.json",
     ]
     print("- auth-bearing files (presence only):")
     for path in auth_files:
@@ -784,45 +768,6 @@ def scan_browser_bridge() -> None:
         print("  no known Claude Chrome extension IDs found")
 
 
-def scan_teamo_preservation() -> None:
-    print_section("Teamo Preservation Surfaces")
-    for path in TEAMO_PATHS:
-        print(f"- {rel(path)} {'exists' if path.exists() else 'missing'}")
-
-    result = subprocess.run(
-        ["sh", "-lc", "which -a teamo"],
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    if result.returncode == 0 and result.stdout.strip():
-        print("- PATH lookup for teamo:")
-        for line in result.stdout.strip().splitlines():
-            print(f"  {line}")
-    else:
-        print("- PATH lookup for teamo: not found")
-
-    npm = shutil.which("npm")
-    if npm:
-        result = subprocess.run(
-            [npm, "list", "-g", "--depth=0"],
-            text=True,
-            capture_output=True,
-            check=False,
-        )
-        lines = [
-            line.strip()
-            for line in (result.stdout + "\n" + result.stderr).splitlines()
-            if "teamolab" in line.lower() or "teamo" in line.lower()
-        ]
-        if lines:
-            print("- global npm Teamo packages:")
-            for line in lines[:20]:
-                print(f"  {line}")
-        else:
-            print("- no global npm Teamo packages reported")
-
-
 def scan_launch_agents() -> None:
     print_section("Likely LaunchAgents")
     root = HOME / "Library" / "LaunchAgents"
@@ -854,7 +799,6 @@ def main() -> int:
     scan_locale_font_signals()
     scan_official_install()
     scan_browser_bridge()
-    scan_teamo_preservation()
     scan_launch_agents()
     return 0
 
