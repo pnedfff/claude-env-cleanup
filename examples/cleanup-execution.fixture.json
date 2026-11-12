@@ -1,0 +1,65 @@
+{
+  "fixture": true,
+  "note": "仅格式示例；临时目录及备份已在测试结束后销毁，不可作为恢复路径。",
+  "scenarios": [
+    {
+      "scenario": "verified_success",
+      "plan": {
+        "plan_id": "58e29ff6b43f40c2872f7c278eec83d2",
+        "mode": "fixture_only",
+        "requires_review": true,
+        "items": [
+          {
+            "id": "641e7bf10fc405b5",
+            "path": "~/.claude/cache",
+            "action": "backup_then_remove_cache",
+            "entries": 2,
+            "bytes": 18
+          }
+        ]
+      },
+      "receipt": {
+        "mode": "fixture_only",
+        "status": "complete",
+        "items": [
+          {
+            "id": "641e7bf10fc405b5",
+            "state": "removed"
+          }
+        ],
+        "backup_verified": true,
+        "backup_directory": "<temporary-fixture-backup>"
+      }
+    },
+    {
+      "scenario": "backup_write_failure",
+      "plan": {
+        "plan_id": "c0b8e8d1c79241f5baa845df5f0b4f8d",
+        "mode": "fixture_only",
+        "requires_review": true,
+        "items": [
+          {
+            "id": "641e7bf10fc405b5",
+            "path": "~/.claude/cache",
+            "action": "backup_then_remove_cache",
+            "entries": 2,
+            "bytes": 18
+          }
+        ]
+      },
+      "receipt": {
+        "mode": "fixture_only",
+        "status": "stopped",
+        "items": [
+          {
+            "id": "641e7bf10fc405b5",
+            "state": "not_executed"
+          }
+        ],
+        "backup_verified": false,
+        "backup_directory": "<temporary-fixture-backup>",
+        "reason": "OSError"
+      }
+    }
+  ]
+}

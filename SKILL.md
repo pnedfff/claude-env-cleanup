@@ -3,17 +3,19 @@ name: claude-env-cleanup
 description: Audit, clean, and when explicitly requested uninstall local Claude Code, Claude Desktop/PWA, Anthropic browser bridges/extensions, auth/config residue, CC Switch app/data/routes, Claude network signals, DNS/WebRTC leaks, browser locale/timezone/font signals, PWR fingerprint signals, environment fingerprint baseline, official Claude privacy controls, and coding-agent config risks on Kevin's Mac while preserving Teamo Code and Claude-to-IM by default. Use for "Claude 环境清理", "清理 Claude 残留", "Claude 封号", "被封账号后", "封号自查", "指纹重置", "养号期", "清除浏览器 Cookie", "Claude 隐私控制", "DISABLE_TELEMETRY", "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC", "网络环境监测", "环境指纹档案", "PWR 指纹", "DNS 泄露", "WebRTC 泄露", "IP 纯净度", "卸载 Claude", "删除官方 Claude App", "删除 Claude Code", "CC Switch 可以删掉", "删除 CC Switch", "ANTHROPIC_*", "127.0.0.1:15721", "系统时区", "Asia/Singapore", "浏览器语言", "canvas 字体探测", or when a Claude artifact may be a CLI, app, LaunchAgent, proxy, browser bridge, or config needing backup-first inspection and cleanup.
 ---
 
+# Claude Env Cleanup（Claude 环境清理）
+
 # Claude Env Cleanup
 
 ## Safety Contract
 
 Default to audit-only until the user explicitly asks to clean. Never print raw secrets, tokens, API keys, OAuth values, refresh tokens, or full private config values. Report only key presence, route markers, table/column hits, process names, and safe operational implications.
 
-Before destructive or mutating work, create a timestamped backup under `/Users/kevin/Backups/` or next to the file being edited, then state the backup path. Make minimal scoped edits. Do not remove unrelated proxies, especially ClashX on `7890`, when the problem is Claude-specific routing on `127.0.0.1:15721`.
+Before destructive or mutating work, create a timestamped backup under `~/Backups/` or next to the file being edited, then state the backup path. Make minimal scoped edits. Do not remove unrelated proxies, especially ClashX on `7890`, when the problem is Claude-specific routing on `127.0.0.1:15721`.
 
 Uninstall official Claude App or Claude Code itself only when the user explicitly asks to delete, remove, or uninstall the body/app/CLI. When that explicit request exists, stop running confirmed official Claude processes first, move app/data/browser-bridge residue to Trash or a timestamped backup folder, uninstall package-manager installs with the package manager when possible, and verify that the binary/app no longer exists. Treat Chrome PWA shortcuts, `Claude Code URL Handler.app`, Anthropic Native Messaging manifests, and Claude browser extensions as app/CLI entry points when the user asks to remove Claude App and Claude Code.
 
-Preserve Teamo Code unless the user separately and explicitly asks to remove Teamo. Preserve `com.claude-to-im.bridge` and `/Users/kevin/code/Claude-to-IM-skill` unless the user explicitly asks to remove that bridge; Kevin uses it as a Codex integration, not as proof of official Claude. Do not delete `/opt/homebrew/bin/teamo`, `@teamolab/teamo-cli`, `~/.teamo`, or `~/.claude/projects`. Teamo terminal verification can depend on `~/.teamo/*` and session JSONL files under `~/.claude/projects`. If a short-lived `claude` process appears with parent `teamo`, treat it as Teamo runtime behavior, not proof that the official Claude Code binary is still installed.
+Preserve Teamo Code unless the user separately and explicitly asks to remove Teamo. Preserve `com.claude-to-im.bridge` and `~/code/Claude-to-IM-skill` unless the user explicitly asks to remove that bridge; Kevin uses it as a Codex integration, not as proof of official Claude. Do not delete `/opt/homebrew/bin/teamo`, `@teamolab/teamo-cli`, `~/.teamo`, or `~/.claude/projects`. Teamo terminal verification can depend on `~/.teamo/*` and session JSONL files under `~/.claude/projects`. If a short-lived `claude` process appears with parent `teamo`, treat it as Teamo runtime behavior, not proof that the official Claude Code binary is still installed.
 
 For coding-agent config hygiene, distinguish active config from historical evidence. Audit active config files first. Do not recursively grep session logs, debug logs, caches, plugin bundles, or backups by default; they create noise and can expose private content. Move historical debug/telemetry/router backups only when the user asks to clean local residue or privacy traces.
 
@@ -32,13 +34,13 @@ For official Claude Code privacy controls, prefer Anthropic's documented environ
 Run the bundled read-only audit first:
 
 ```bash
-python3 "$SKILL_DIR/scripts/audit_claude_env.py"
+python3 "$SKILL_DIR/scripts/audit_claude_env.py" --audit
 ```
 
 If `SKILL_DIR` is not set, resolve it from the skill folder path and run:
 
 ```bash
-python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_claude_env.py
+python3 ~/.agents/skills/claude-env-cleanup/scripts/audit_claude_env.py --audit
 ```
 
 Use the output to decide which workflow applies. If the audit finds sensitive keys, say only that the key exists and where it is configured, not its value.
@@ -48,19 +50,21 @@ The audit also reports official Claude privacy controls from the current process
 For network environment monitoring, run the read-only network audit:
 
 ```bash
-python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_network_env.py
+python3 ~/.agents/skills/claude-env-cleanup/scripts/audit_network_env.py
 ```
+
+The CLI audit cannot see browser-only signals (WebRTC candidates, `Intl` locale, font probing, browser DNS). When those matter, point the user to the browser self-check at https://1pro.men/whoami/ and the manual checklist at https://blog.1pro.men/posts/claude-stability-checklist/. Do not open or fetch the page on the user's behalf unless asked.
 
 When the user explicitly wants live public-IP and Claude reachability checks, add `--external`. To track whether the node region changes over time, append a history snapshot:
 
 ```bash
-python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_network_env.py --external --append-history ~/.codex/network-env-history.jsonl
+python3 ~/.agents/skills/claude-env-cleanup/scripts/audit_network_env.py --external --append-history ~/.codex/network-env-history.jsonl
 ```
 
 For a banned-account recovery self-check, add `--post-ban` so the audit prints browser site-data targets, manual cleanup reminders, and the five-site guide checklist:
 
 ```bash
-python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_network_env.py --post-ban
+python3 ~/.agents/skills/claude-env-cleanup/scripts/audit_network_env.py --post-ban
 ```
 
 For a reusable local environment baseline, create or read `~/.claude/session-env/environment-fingerprint-profile.md`. When answering from that file, say it is the user-confirmed local baseline and include its date before deciding whether a live re-check is needed.
@@ -216,7 +220,7 @@ Use when the user explicitly says CC Switch can be deleted or asks to remove CC 
    - `ps ax -o pid=,ppid=,comm=` matches for `CC Switch|cc-switch|ccswitch`
    - `launchctl list` and `~/Library/LaunchAgents` matches for CC Switch
    - `lsof -nP -iTCP:15721 -sTCP:LISTEN`
-2. Create `/Users/kevin/Backups/cc-switch-delete-<timestamp>/` with `inventory/`, `files/`, and `removed/`.
+2. Create `~/Backups/cc-switch-delete-<timestamp>/` with `inventory/`, `files/`, and `removed/`.
 3. Copy `/Applications/CC Switch.app` and `~/.cc-switch` into `files/` before deletion or movement.
 4. Uninstall the cask with `HOMEBREW_NO_AUTO_UPDATE=1 brew uninstall --cask cc-switch`, capturing stdout/stderr into `inventory/`.
 5. Move any remaining `~/.cc-switch` and `/Applications/CC Switch.app` into `removed/`.
@@ -281,7 +285,7 @@ Use when the user asks to enable Claude privacy controls, turn off telemetry/err
 3. Do not set `skipWebFetchPreflight` unless the user specifically asks to disable the WebFetch domain safety check and accepts the security tradeoff.
 4. Do not set auto-update or feature-flag-disabling variables as part of the privacy-control default unless the user asks for that narrower behavior.
 5. Validate with `python3 -m json.tool ~/.claude/settings.json`.
-6. Re-run `python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_claude_env.py` and confirm the "Official Claude Privacy Controls" section reports the expected controls.
+6. Re-run `python3 ~/.agents/skills/claude-env-cleanup/scripts/audit_claude_env.py` and confirm the "Official Claude Privacy Controls" section reports the expected controls.
 7. Tell the user to restart Claude Code, Claude Desktop if relevant, and terminal sessions. Some settings reload on file change, but env-style controls are safest after process restart.
 8. Clarify scope: these controls opt out of documented telemetry, error reporting, feedback, surveys, and nonessential traffic; they are not the same thing as zero data retention, browser cookie cleanup, or a full fingerprint reset.
 
@@ -308,7 +312,7 @@ Use when the user is comparing local browser/system signals such as `Intl.DateTi
 Use when the user wants a reusable local baseline for questions such as "本机时区是什么", "出口/DNS/IP/WebRTC 是什么", "PWR 指纹是什么", or "按本机环境指纹汇总". This profile is for local Claude/Codex context, not for public repo publishing.
 
 1. Generate the candidate from read-only sources:
-   - `python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_network_env.py`
+   - `python3 ~/.agents/skills/claude-env-cleanup/scripts/audit_network_env.py`
    - Add `--external` only when public-IP and Claude reachability probes are appropriate.
    - Prefer browser-side checks for DNS/WebRTC verdicts.
 2. Sanitize before writing a profile:
@@ -367,8 +371,8 @@ Codex can automatically help by auditing local residue, checking active routes, 
 Use when the user says a Claude account was banned and asks for the three-step reset: clear browser cookies, remove CC Switch, and check/remove Claude Code terminal plus Claude Desktop App. This workflow is audit-first; it can identify cleanup targets, but cookie/site-data clearing and in-browser extension removal are manual unless Kevin explicitly requests destructive browser-data edits.
 
 1. Start with read-only audits:
-   - `python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_claude_env.py`
-   - `python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_network_env.py --post-ban`
+   - `python3 ~/.agents/skills/claude-env-cleanup/scripts/audit_claude_env.py`
+   - `python3 ~/.agents/skills/claude-env-cleanup/scripts/audit_network_env.py --post-ban`
    - Add `--external` only when live public-IP and Claude reachability checks are appropriate.
 2. Step 1, browser reset:
    - MANUAL REQUIRED: in every browser profile used with the banned account, clear site data/cookies/cache for `claude.ai`, `anthropic.com`, `console.anthropic.com`, and any Claude login/session helper domains.
@@ -402,7 +406,7 @@ Use when the user says a Claude account was banned and asks for the three-step r
 Use when the user asks to check Claude network environment, IP purity, DNS leak, WebRTC leak, node region stability, or the "5 checks" from a Claude usage guide.
 
 1. Run the local audit first:
-   - `python3 ~/.codex/skills/claude-env-cleanup/scripts/audit_network_env.py`
+   - `python3 ~/.agents/skills/claude-env-cleanup/scripts/audit_network_env.py`
    - Add `--external` only when live public-IP and Claude endpoint requests are appropriate.
    - Add `--post-ban` when the user wants the five-site post-ban guide checklist and browser site-data cleanup reminders.
    - Add `--append-history ~/.codex/network-env-history.jsonl` when the user wants node-region drift monitoring.
@@ -494,3 +498,96 @@ When reporting results, separate:
 - changes made
 - backup paths
 - residual risks or intentionally preserved routes
+
+
+## 审计输出与检查完整性
+
+脚本从自身目录加载 `scripts/audit_support.py`，安装时须保留完整 `scripts/` 目录。
+本机实际入口为 `~/.agents/skills/claude-env-cleanup`；其他安装位置应使用实际技能目录，不依赖 `SKILL_DIR` 一定存在。
+
+- `checked` 表示该检查已执行；`unknown` / `error` 表示采集不完整；`not_checked` 表示未请求或需人工检测。
+- 退出码 `0` 表示请求范围内采集完成，不代表环境安全；`2` 表示采集不完整。未请求外部探测不会伪装成已检测。
+- 历史比较仅对双方都有值的国家和 ASN 给出匹配或差异；无可比数据时无法判断稳定性。原始 IP 不保存，因此不会声称 IP 未变化。
+- 新增历史记录仅保存脱敏后的国家、ASN、时区、匿名汇总语言和监听数量，不保存 IP、浏览器 profile 名称、任意服务响应或凭据。旧历史只读脱敏，不自动改写原件。
+- 代理 URL 只显示协议、主机和端口；凭据、路径、查询、片段与无法解析的值不输出。错误只输出异常类型或固定错误类别。
+- 原有备份、Teamo、共享会话、Claude-to-IM、通用代理和浏览器数据保护规则保持不变。
+
+假数据回归（不运行真实环境审计）：
+
+```bash
+python3 ~/.agents/skills/claude-env-cleanup/scripts/test_audit_minimal.py
+```
+
+
+## 结构化清理审阅清单
+
+默认运行 `audit_claude_env.py` 只生成固定 Claude 路径的元数据清单，不运行进程、包管理器或网络诊断，不读取配置、凭据或会话正文。原有详细只读诊断通过 `--audit` 显式开启，默认同样仅限 Claude；跨工具检查需显式 `--scope all`。
+
+```bash
+# 默认 Claude 清单，供人阅读
+python3 ~/.agents/skills/claude-env-cleanup/scripts/audit_claude_env.py
+
+# 纯 JSON 清单，stdout 不混入日志
+python3 ~/.agents/skills/claude-env-cleanup/scripts/audit_claude_env.py --format json
+
+# 显式跨工具配置元数据审阅；仍不清理
+python3 ~/.agents/skills/claude-env-cleanup/scripts/audit_claude_env.py --scope all --format json
+
+# 原有详细只读 Claude 审计
+python3 ~/.agents/skills/claude-env-cleanup/scripts/audit_claude_env.py --audit
+```
+
+清单含稳定项目 ID、路径、类别、预期归属、检测状态、候选/审阅/保护判定、影响、保护原因和默认未选中状态。归属来自固定路径规则，不表示已核验安装身份；不存在的路径不称为候选。目录大小不递归计算。Teamo、Claude-to-IM 只记录保留政策而不访问其数据；共享会话、个人技能与旧备份始终受保护。文件或父目录符号链接不跟随，并标为检查不完整。
+
+`executable: false`、`selected: false` 和 `review_only` 表示本轮仅供审阅。项目 ID 可用于生成临时测试工作区中的执行准备计划；清单本身不构成删除授权，也不是内容快照或恢复备份。真实清理入口仍关闭。`--audit` 与 `--format json` 不可组合，避免把纯元数据清单混同于详细诊断结果。
+
+假目录生成的示例：`examples/cleanup-manifest.fixture.json`。它不代表本机实际状态。运行全部假数据回归：
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s ~/.agents/skills/claude-env-cleanup/scripts -p 'test_*.py'
+```
+
+
+## 清理执行器：第三批，临时目录测试限定
+
+`scripts/cleanup_executor.py` 提供 `FixtureWorkspace.prepare(manifest, ids)` 与 `execute(plan)`。工作区只能由内部 `TemporaryDirectory` 创建，不接受真实用户目录参数；直接运行该模块会拒绝真实清理。第三批测试使用假进程快照，第四批真实只读采集见下文；进程状态缺失或不完整时拒绝执行，绝不自动终止 Claude、Teamo 或 Claude-to-IM。
+
+仅支持固定白名单中的缓存/日志候选项。配置、认证、应用/CLI 卸载、浏览器数据、跨工具项、共享会话、技能、Teamo、Claude-to-IM 与备份均不能借改写清单获得执行资格。现有保护规则不变。
+
+执行步骤：
+
+1. 按项目 ID 重建固定目标，不接受清单中的任意路径；拒绝重复/未知 ID、受保护项和需人工审阅项。旧 schema 1 清单必须重新生成。
+2. schema 2 清单记录文件身份元数据；准备阶段复核元数据并生成目录/文件的身份与 SHA-256 内容快照。返回含 ID、路径、影响动作、条目数和字节数的一次性审阅计划，尚不备份或清理。
+3. 执行阶段核对注册计划、父目录身份、内容快照及完整进程状态。拒绝符号链接、硬链接、特殊文件、外部所有权、不安全路径和超限扫描；使用排他事务锁。
+4. 在私有备份目录保存所有选中项，以内容摘要、文件大小与完整目录结构验证备份，并写入及读回备份清单。全部通过才允许第一项删除；每项执行前再核对本项备份、源对象和进程。
+5. 原对象按目录描述符原子移动到隔离暂存区，再核对实际移入的对象和进程后删除。原路径上新出现的文件不会被删除或覆盖。
+6. 任一错误立即停止，回执分别记录已删除、未执行、执行前失败、暂存保留或删除失败可能部分完成。已删除项不自动回滚；备份和残余暂存数据用于显式恢复。错误只输出固定原因或异常类型。
+
+这是临时目录测试实现，不是已验收的生产清理器；测试上下文退出后临时备份也会删除，不能当成真实用户数据的恢复方案。`examples/cleanup-execution.fixture.json` 仅为假数据成功/失败回执示例。真实路径的写入执行与恢复操作仍未开放；第四批增加真实只读采集和路径预检。
+
+只运行假数据回归：
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s ~/.agents/skills/claude-env-cleanup/scripts -p 'test_*.py'
+```
+
+
+## 第四批：真实进程采集与生产路径只读预检
+
+`scripts/production_preflight.py` 只读检查当前用户可见进程和固定 Claude 候选路径，输出清理计划与备份方案；没有创建备份、修改配置、停止进程或删除数据的代码入口。
+
+```bash
+python3 ~/.agents/skills/claude-env-cleanup/scripts/production_preflight.py --format markdown
+python3 ~/.agents/skills/claude-env-cleanup/scripts/production_preflight.py --format json
+```
+
+- `ps` 仅读取 PID、父 PID、UID 和 executable/comm，不读取命令参数；`lsof` 检查所采集 PID 的文件引用，`launchctl print` 检查 Claude-to-IM 服务。原始输出不显示或写入报告，报告只保留 PID、固定分组和检测状态。
+- 名称与文件引用不是官方安装归属证明。Teamo、Claude-to-IM 和共享 Claude 状态的使用者只会成为执行阻塞证据，不会被列为卸载对象或被自动终止。两次进程采样变化、权限不足、工具缺失或解析不完整均标为未知。
+- 默认只预检固定 Claude 缓存/日志候选项，以目录描述符检查符号链接、硬链接、对象类型、所有权和元数据变化。不读取文件正文；10,000 个条目或 10 秒达到上限时标为未知，不声称完整大小或内容验收。
+- 清理计划始终 `executable: false` 且所有项未选中；保护名单与影响会列入计划。生产报告不能交给临时执行器。
+- 备份仅提出 `~/Backups/ClaudeCleanup/<plan-id>` 的方案，检查现有父路径、容量下限与访问条件，不做写入试验。目录权限拟为 0700，文件拟为 0600；任何清理前须对全部选中项做内容摘要、目录结构、源状态和备份清单读回验证。
+- 若任何目录大小未知，备份总容量与所需空间估算保持未知，仅报告已扫描部分和最低空间下限。容量预检不能替代实际备份成功验证。
+- 自定义 `CLAUDE_CONFIG_DIR` 仅报告需另行明确范围，不自动扩大扫描，不显示其私有值。
+- 退出码 2 表示有阻塞；0 仅表示已测范围内没有已知阻塞，仍需审阅、准确项目授权及重新采样。真实路径写入执行入口继续关闭。
+
+本机预检报告属于本地用户资料，应写入工作区 `outputs/` 或指定本地目录，不提交到公开技能仓库。脚本 stdout 默认仅输出报告，不默认落盘。

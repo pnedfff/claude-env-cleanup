@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import pathlib
@@ -12,6 +13,9 @@ import subprocess
 import sys
 from datetime import datetime
 from typing import Any, Iterable
+
+from audit_support import AUDIT, run_command, safe_error
+from cleanup_manifest import build_manifest, render_text
 
 
 HOME = pathlib.Path.home()
@@ -268,7 +272,8 @@ def scan_json_file(path: pathlib.Path) -> None:
     try:
         obj = json.loads(path.read_text(errors="replace"))
     except Exception as exc:
-        print(f"- {rel(path)} JSON parse failed: {exc}")
+        AUDIT.issue("config_read", reason=safe_error(exc))
+        print(f"- {rel(path)} JSON parse failed: {safe_error(exc)}")
         scan_text_file(path)
         return
 
@@ -303,7 +308,8 @@ def scan_json_file(path: pathlib.Path) -> None:
 def scan_json_config_summary(path: pathlib.Path) -> None:
     try:
         obj = json.loads(path.read_text(errors="replace"))
-    except Exception:
+    except Exception as exc:
+        AUDIT.issue("config_parse", reason=safe_error(exc))
         scan_text_file(path)
         return
 
@@ -361,7 +367,8 @@ def scan_sqlite(path: pathlib.Path) -> None:
     try:
         conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
     except Exception as exc:
-        print(f"- {rel(path)} SQLite open failed: {exc}")
+        AUDIT.issue("config_read", reason=safe_error(exc))
+        print(f"- {rel(path)} SQLite open failed: {safe_error(exc)}")
         return
 
     try:
@@ -394,7 +401,8 @@ def scan_sqlite(path: pathlib.Path) -> None:
                             f"WHERE CAST({quote_ident(col)} AS TEXT) LIKE ?",
                             (f"%{marker}%",),
                         ).fetchone()[0]
-                    except Exception:
+                    except Exception as exc:
+                        AUDIT.issue("sqlite_query", reason=safe_error(exc))
                         continue
                     if count:
                         if marker in SENSITIVE_KEYS:
@@ -411,9 +419,15 @@ def scan_sqlite(path: pathlib.Path) -> None:
         conn.close()
 
 
-def scan_files() -> None:
+def is_claude_config(path: pathlib.Path) -> bool:
+    return path == HOME / ".claude.json" or path.is_relative_to(HOME / ".claude")
+
+
+def scan_files(scope: str = "claude") -> None:
     print_section("Config Files")
     for path in FILES:
+        if scope != "all" and not is_claude_config(path):
+            continue
         if not path.exists():
             print(f"- {rel(path)} missing")
             continue
@@ -426,9 +440,11 @@ def scan_files() -> None:
             scan_text_file(path)
 
 
-def scan_coding_agent_configs() -> None:
+def scan_coding_agent_configs(scope: str = "claude") -> None:
     print_section("Coding Agent Config Chain")
     for path in CODING_AGENT_CONFIGS:
+        if scope != "all" and not is_claude_config(path):
+            continue
         if not path.exists():
             print(f"- {rel(path)} missing")
             continue
@@ -446,6 +462,8 @@ def scan_coding_agent_configs() -> None:
         HOME / ".openclaw-lan-u2" / "identity" / "device-auth.json",
         HOME / ".openclaw-lan-u3" / "identity" / "device-auth.json",
     ]
+    if scope != "all":
+        return
     print("- auth-bearing files (presence only):")
     for path in auth_files:
         print(f"  {rel(path)} {'exists' if path.exists() else 'missing'}")
@@ -495,7 +513,8 @@ def scan_privacy_controls() -> None:
         try:
             obj = json.loads(path.read_text(errors="replace"))
         except Exception as exc:
-            print(f"- {rel(path)} JSON parse failed: {exc}")
+            AUDIT.issue("config_parse", reason=safe_error(exc))
+            print(f"- {rel(path)} JSON parse failed: {safe_error(exc)}")
             continue
 
         env = obj.get("env")
@@ -525,14 +544,18 @@ def scan_port() -> None:
     print_section("Port 15721")
     lsof = shutil.which("lsof")
     if not lsof:
+        AUDIT.issue("port_15721", "unknown", "lsof not found")
         print("- lsof not found")
         return
-    result = subprocess.run(
+    result = run_command(
         [lsof, "-nP", "-iTCP:15721", "-sTCP:LISTEN"],
         text=True,
         capture_output=True,
         check=False,
     )
+    if result.returncode not in (0, 1) or result.stderr:
+        print("- port 15721: unknown (inspection failed)")
+        return
     if result.returncode == 0 and result.stdout.strip():
         lines = result.stdout.strip().splitlines()
         print("- listener present:")
@@ -549,7 +572,7 @@ def scan_cc_switch_artifacts() -> None:
 
     brew = shutil.which("brew")
     if brew:
-        result = subprocess.run(
+        result = run_command(
             [brew, "list", "--cask"],
             text=True,
             capture_output=True,
@@ -561,7 +584,7 @@ def scan_cc_switch_artifacts() -> None:
     else:
         print("- brew not found")
 
-    result = subprocess.run(
+    result = run_command(
         ["sh", "-lc", "which -a cc-switch ccswitch 2>/dev/null"],
         text=True,
         capture_output=True,
@@ -574,7 +597,7 @@ def scan_cc_switch_artifacts() -> None:
     else:
         print("- PATH lookup for cc-switch/ccswitch: not found")
 
-    result = subprocess.run(
+    result = run_command(
         ["ps", "ax", "-o", "pid=,ppid=,comm="],
         text=True,
         capture_output=True,
@@ -605,7 +628,7 @@ def scan_locale_font_signals() -> None:
     else:
         print("- /etc/localtime missing")
 
-    result = subprocess.run(
+    result = run_command(
         ["date", "+%Y-%m-%d %H:%M:%S %Z %z"],
         text=True,
         capture_output=True,
@@ -654,7 +677,7 @@ def scan_official_install() -> None:
             print(f"- {rel(pattern)} no matches")
 
     print("- PATH lookup for claude:")
-    result = subprocess.run(
+    result = run_command(
         ["sh", "-lc", "which -a claude"],
         text=True,
         capture_output=True,
@@ -681,7 +704,7 @@ def scan_official_install() -> None:
 
     npm = shutil.which("npm")
     if npm:
-        result = subprocess.run(
+        result = run_command(
             [npm, "list", "-g", "--depth=0"],
             text=True,
             capture_output=True,
@@ -728,7 +751,8 @@ def scan_browser_bridge() -> None:
             try:
                 obj = json.loads(path.read_text(errors="replace"))
             except Exception as exc:
-                print(f"  JSON parse failed: {exc}")
+                AUDIT.issue("manifest_parse", reason=safe_error(exc))
+                print(f"  JSON parse failed: {safe_error(exc)}")
                 continue
             target = obj.get("path")
             if isinstance(target, str):
@@ -779,7 +803,8 @@ def scan_browser_bridge() -> None:
                                 )
                             )
                         except Exception as exc:
-                            print(f"    manifest parse failed: {exc}")
+                            AUDIT.issue("manifest_parse", reason=safe_error(exc))
+                            print(f"    manifest parse failed: {safe_error(exc)}")
     if not any_extensions:
         print("  no known Claude Chrome extension IDs found")
 
@@ -789,7 +814,7 @@ def scan_teamo_preservation() -> None:
     for path in TEAMO_PATHS:
         print(f"- {rel(path)} {'exists' if path.exists() else 'missing'}")
 
-    result = subprocess.run(
+    result = run_command(
         ["sh", "-lc", "which -a teamo"],
         text=True,
         capture_output=True,
@@ -804,7 +829,7 @@ def scan_teamo_preservation() -> None:
 
     npm = shutil.which("npm")
     if npm:
-        result = subprocess.run(
+        result = run_command(
             [npm, "list", "-g", "--depth=0"],
             text=True,
             capture_output=True,
@@ -823,7 +848,7 @@ def scan_teamo_preservation() -> None:
             print("- no global npm Teamo packages reported")
 
 
-def scan_launch_agents() -> None:
+def scan_launch_agents(scope: str = "claude") -> None:
     print_section("Likely LaunchAgents")
     root = HOME / "Library" / "LaunchAgents"
     if not root.exists():
@@ -832,7 +857,10 @@ def scan_launch_agents() -> None:
     matches = []
     for item in root.glob("*.plist"):
         name = item.name.lower()
-        if any(token in name for token in ["claude", "cc-switch", "anthropic"]):
+        if name == "com.claude-to-im.bridge.plist":
+            continue
+        tokens = ["claude", "anthropic"] + (["cc-switch"] if scope == "all" else [])
+        if any(token in name for token in tokens):
             matches.append(item)
     if matches:
         for item in matches:
@@ -841,22 +869,47 @@ def scan_launch_agents() -> None:
         print("- no obvious Claude/CC Switch LaunchAgent names found")
 
 
-def main() -> int:
-    print("# Claude and Coding-Agent Environment Audit")
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(description="Read-only Claude cleanup review inventory; never executes cleanup.")
+    parser.add_argument("--scope", choices=("claude", "all"), default="claude",
+                        help="default Claude inventory; all explicitly includes cross-tool configs")
+    parser.add_argument("--format", choices=("text", "json"), default="text")
+    parser.add_argument("--audit", action="store_true", help="also run existing detailed read-only diagnostics (text only)")
+    args = parser.parse_args(argv)
+    if args.audit and args.format == "json":
+        parser.error("--audit requires --format text; JSON reports metadata inventory only")
+    return args
+
+
+def main(argv=None) -> int:
+    args = parse_args(argv)
+    AUDIT.records.clear()
+    manifest = build_manifest(scope=args.scope)
+    if args.format == "json":
+        print(json.dumps(manifest, ensure_ascii=False, indent=2))
+    else:
+        render_text(manifest)
+    inventory_incomplete = manifest["completeness"] == "incomplete"
+    if not args.audit:
+        return 2 if inventory_incomplete else 0
+    if inventory_incomplete:
+        AUDIT.issue("cleanup_inventory", "unknown", "metadata inspection incomplete")
+    print("\n# Detailed Environment Audit")
     print(f"Generated: {datetime.now().isoformat(timespec='seconds')}")
-    print("Mode: read-only; secret values are not printed")
-    scan_files()
-    scan_coding_agent_configs()
-    scan_env()
-    scan_privacy_controls()
-    scan_port()
-    scan_cc_switch_artifacts()
-    scan_locale_font_signals()
-    scan_official_install()
-    scan_browser_bridge()
-    scan_teamo_preservation()
-    scan_launch_agents()
-    return 0
+    print(f"Mode: read-only; scope={args.scope}; secret values are not printed")
+    AUDIT.check(scan_files, args.scope)
+    if args.scope == "all":
+        AUDIT.check(scan_coding_agent_configs, args.scope)
+        AUDIT.check(scan_port)
+        AUDIT.check(scan_cc_switch_artifacts)
+        AUDIT.check(scan_locale_font_signals)
+        AUDIT.check(scan_teamo_preservation)
+    AUDIT.check(scan_env)
+    AUDIT.check(scan_privacy_controls)
+    AUDIT.check(scan_official_install)
+    AUDIT.check(scan_browser_bridge)
+    AUDIT.check(scan_launch_agents, args.scope)
+    return AUDIT.summary()
 
 
 if __name__ == "__main__":

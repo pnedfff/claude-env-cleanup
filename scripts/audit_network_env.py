@@ -20,6 +20,8 @@ import urllib.request
 from datetime import datetime
 from typing import Any
 
+from audit_support import AUDIT, run_command, safe_error, sanitize_urlish
+
 
 HOME = pathlib.Path.home()
 
@@ -84,45 +86,18 @@ def print_section(title: str) -> None:
 
 
 def run(cmd: list[str], timeout: int = 8) -> subprocess.CompletedProcess[str]:
-    try:
-        return subprocess.run(
-            cmd,
-            text=True,
-            capture_output=True,
-            check=False,
-            timeout=timeout,
-        )
-    except Exception as exc:
-        return subprocess.CompletedProcess(cmd, 999, "", str(exc))
+    return run_command(cmd, timeout=timeout, text=True, capture_output=True, check=False)
 
 
 def sh(command: str, timeout: int = 8) -> subprocess.CompletedProcess[str]:
     return run(["sh", "-lc", command], timeout=timeout)
 
 
-def sanitize_urlish(value: str) -> str:
-    value = value.strip()
-    if not value:
-        return value
-    try:
-        parsed = urllib.parse.urlsplit(value)
-    except Exception:
-        return value[:160]
-    if not parsed.scheme or not parsed.netloc:
-        return value[:160]
-    host = parsed.hostname or ""
-    port = f":{parsed.port}" if parsed.port else ""
-    user = "***@" if parsed.username or parsed.password else ""
-    path = parsed.path or ""
-    if len(path) > 40:
-        path = path[:37] + "..."
-    return urllib.parse.urlunsplit((parsed.scheme, f"{user}{host}{port}", path, "", ""))
-
-
 def safe_json(path: pathlib.Path) -> Any | None:
     try:
         return json.loads(path.read_text(errors="replace"))
-    except Exception:
+    except Exception as exc:
+        AUDIT.issue("browser_preferences", reason=safe_error(exc))
         return None
 
 
@@ -155,7 +130,7 @@ def request_url(url: str, timeout: int) -> tuple[int | None, str, str, float]:
         return exc.code, exc.geturl(), body, elapsed
     except Exception as exc:
         elapsed = time.monotonic() - started
-        return None, url, f"{type(exc).__name__}: {exc}", elapsed
+        return None, url, safe_error(exc), elapsed
 
 
 def parse_cloudflare_trace(text: str) -> dict[str, str]:
@@ -177,23 +152,32 @@ def public_ip_probes(timeout: int) -> dict[str, Any]:
         status, final_url, body, elapsed = request_url(url, timeout)
         print(f"- {label}: status={status or 'error'} elapsed={elapsed:.2f}s")
         if status is None:
-            print(f"  error: {body[:160]}")
+            AUDIT.issue("external_probe", reason="request failed")
+            print("  error: request failed (details redacted)")
+            continue
+        if not 200 <= status < 300:
+            AUDIT.issue("external_ip", reason=f"HTTP {status}")
             continue
         data: dict[str, Any] = {}
         if kind == "json":
             try:
                 data = json.loads(body)
-            except Exception:
+                if not isinstance(data, dict):
+                    raise ValueError("expected object")
+            except Exception as exc:
+                AUDIT.issue("external_ip_json", reason=safe_error(exc))
                 data = {}
         elif kind == "trace":
             data = parse_cloudflare_trace(body)
+        if not data.get("ip"):
+            AUDIT.issue("external_ip", "unknown", "missing IP observation")
         if data:
-            printable = []
             for key in ["ip", "country", "country_name", "region", "city", "org", "asn", "loc", "colo", "warp"]:
                 if key in data:
-                    printable.append(f"{key}={data[key]}")
                     collected.setdefault(key, data[key])
-            print("  " + "; ".join(printable[:10]))
+            safe = sanitize_snapshot(collected)
+            printable = [f"{key}={value}" for key, value in safe.items()]
+            print("  metadata observed (IP redacted); " + "; ".join(printable))
         if final_url != url:
             print(f"  final_url={sanitize_urlish(final_url)}")
 
@@ -201,8 +185,11 @@ def public_ip_probes(timeout: int) -> dict[str, Any]:
         status, final_url, body, elapsed = request_url(url, timeout)
         print(f"- {label}: status={status or 'error'} elapsed={elapsed:.2f}s")
         if status is None:
-            print(f"  error: {body[:160]}")
-        elif final_url != url:
+            AUDIT.issue("external_probe", reason="request failed")
+            print("  error: request failed (details redacted)")
+        elif not 200 <= status < 400:
+            AUDIT.issue("https_reachability", "unknown", f"HTTP {status}; application access not verified")
+        if status is not None and final_url != url:
             print(f"  final_url={sanitize_urlish(final_url)}")
     return collected
 
@@ -214,11 +201,12 @@ def dns_resolution() -> dict[str, list[str]]:
         try:
             infos = socket.getaddrinfo(host, 443, proto=socket.IPPROTO_TCP)
         except Exception as exc:
-            print(f"- {host}: failed ({exc})")
+            AUDIT.issue("dns_resolution", reason=safe_error(exc))
+            print(f"- {host}: failed ({safe_error(exc)})")
             continue
         ips = sorted({info[4][0] for info in infos})
         resolved[host] = ips
-        print(f"- {host}: {', '.join(ips[:8])}")
+        print(f"- {host}: {len(ips)} address(es) observed (redacted)")
     return resolved
 
 
@@ -274,20 +262,26 @@ def local_proxy_env() -> None:
         for item in interesting[:20]:
             print(f"  {item}")
     else:
+        AUDIT.issue("system_proxy", "unknown", "settings unavailable")
         print("- macOS proxy settings: unavailable")
 
     result = sh("route -n get default 2>/dev/null | egrep 'gateway|interface'", timeout=5)
     if result.stdout.strip():
         print("- default route:")
         for line in result.stdout.strip().splitlines():
-            print(f"  {line.strip()}")
+            if "interface:" in line:
+                print(f"  {line.strip()}")
+            else:
+                print("  gateway: [redacted]")
     else:
+        AUDIT.issue("default_route", "unknown", "route unavailable")
         print("- default route: unavailable")
 
 
 def dns_system_summary() -> None:
     result = sh("scutil --dns", timeout=5)
     if result.returncode != 0 or not result.stdout.strip():
+        AUDIT.issue("system_dns", "unknown", "resolver settings unavailable")
         print("- system DNS resolvers: unavailable")
         return
     nameservers = []
@@ -302,33 +296,40 @@ def dns_system_summary() -> None:
             value = stripped.split(":", 1)[-1].strip()
             if value not in search_domains:
                 search_domains.append(value)
+    if not nameservers:
+        AUDIT.issue("system_dns", "unknown", "no resolver observations")
     print("- system DNS nameservers:")
     for item in nameservers[:12]:
-        print(f"  {item}")
+        print("  resolver: [redacted]")
     if search_domains:
         print("- DNS search domains:")
         for item in search_domains[:8]:
-            print(f"  {item}")
+            print("  search domain: [redacted]")
 
 
 def watched_ports() -> list[str]:
     lsof = shutil.which("lsof")
     listeners: list[str] = []
     if not lsof:
+        AUDIT.issue("watched_ports", "unknown", "lsof not found")
         print("- watched proxy ports: lsof not found")
         return listeners
     for port in WATCH_PORTS:
         result = run([lsof, "-nP", f"-iTCP:{port}", "-sTCP:LISTEN"], timeout=5)
+        if result.returncode not in (0, 1) or result.stderr:
+            print(f"- port {port}: unknown (inspection failed)")
         if result.returncode == 0 and result.stdout.strip():
             lines = result.stdout.strip().splitlines()[1:]
             for line in lines[:6]:
                 listeners.append(line)
     if listeners:
         print("- watched proxy-port listeners:")
-        for line in listeners[:20]:
-            print(f"  {line}")
+        print(f"  {len(listeners)} listener record(s); addresses and process details redacted")
     else:
-        print("- watched proxy-port listeners: none")
+        if any(check == "command" and state == "error" for check, state, _ in AUDIT.records):
+            print("- no listeners observed; failed checks remain unknown")
+        else:
+            print("- watched proxy-port listeners: none")
     return listeners
 
 
@@ -346,17 +347,13 @@ def browser_language_summary() -> dict[str, dict[str, Any]]:
             if obj is None:
                 continue
             values = {}
-            profile_name = get_nested(obj, ("profile", "name"))
-            if profile_name:
-                values["profile.name"] = profile_name
             for key_path in LANGUAGE_KEYS:
                 value = get_nested(obj, key_path)
                 if value is not None:
                     values[".".join(key_path)] = value
             if values:
-                browser_summary[profile] = values
-                rendered = "; ".join(f"{key}={json.dumps(value, ensure_ascii=False)}" for key, value in values.items())
-                print(f"  {profile}: {rendered}")
+                browser_summary[f"profile-{len(browser_summary) + 1}"] = values
+                print(f"  profile-{len(browser_summary)}: {json.dumps(sanitize_browser_languages({name: {"item": values}}).get(name, []), ensure_ascii=False)}")
         summary[name] = browser_summary
     if not summary:
         print("- Chromium-family browser preferences not found")
@@ -366,7 +363,8 @@ def browser_language_summary() -> dict[str, dict[str, Any]]:
     localtime = ""
     try:
         localtime = os.readlink("/etc/localtime")
-    except OSError:
+    except OSError as exc:
+        AUDIT.issue("system_timezone", "unknown", safe_error(exc))
         localtime = ""
     print(f"- AppleLanguages: {languages if languages else 'unavailable'}")
     print(f"- AppleLocale: {locale if locale else 'unavailable'}")
@@ -387,7 +385,7 @@ def browser_site_data_targets() -> None:
             if not markers:
                 continue
             found = True
-            print(f"- {name}/{profile.name}: {', '.join(markers)}")
+            print(f"- {name}/[profile redacted]: {', '.join(markers)}")
     safari_cookie_dir = HOME / "Library" / "Containers" / "com.apple.Safari" / "Data" / "Library" / "Cookies"
     safari_local_storage = HOME / "Library" / "Safari" / "LocalStorage"
     safari_markers = []
@@ -430,68 +428,128 @@ def manual_quality_checks(post_ban: bool = False) -> None:
     print("- ping0.cc can be used as a reference only; do not treat it as the deciding signal")
 
 
+def sanitize_browser_languages(summary: dict[str, Any]) -> dict[str, list[str]]:
+    result = {}
+    for browser, profiles in summary.items():
+        if browser not in {name for name, _ in BROWSER_ROOTS} or not isinstance(profiles, dict):
+            continue
+        values = set()
+        for settings in profiles.values():
+            if not isinstance(settings, dict):
+                continue
+            for key, value in settings.items():
+                if key not in {".".join(parts) for parts in LANGUAGE_KEYS}:
+                    continue
+                for language in value if isinstance(value, list) else [value]:
+                    if isinstance(language, str):
+                        for item in language.split(","):
+                            item = item.strip()
+                            if re.fullmatch(r"[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*", item):
+                                values.add(item)
+        result[browser] = sorted(values)
+    return result
+
+
+def sanitize_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
+    """Allowlist only; raw IPs, profile identifiers and arbitrary payloads never persist."""
+    clean = {}
+    for field in ("country", "loc"):
+        value = snapshot.get(field)
+        if isinstance(value, str) and re.fullmatch(r"[A-Za-z]{2}", value):
+            clean[field] = value.upper()
+    if "country" not in clean and "loc" in clean:
+        clean["country"] = clean["loc"]
+    asn = snapshot.get("asn")
+    if isinstance(asn, (str, int)) and re.fullmatch(r"(?:AS)?[0-9]{1,10}", str(asn)):
+        clean["asn"] = str(asn)
+    for field in ("timezone", "localtime"):
+        value = snapshot.get(field)
+        if isinstance(value, str) and re.fullmatch(r"[A-Za-z_+-]+(?:/[A-Za-z_+-]+){1,3}", value):
+            clean[field] = value
+    stamp = snapshot.get("timestamp")
+    if isinstance(stamp, str):
+        try:
+            clean["timestamp"] = datetime.fromisoformat(stamp).isoformat(timespec="seconds")
+        except ValueError:
+            pass
+    languages = snapshot.get("browser_languages")
+    if isinstance(languages, dict):
+        # Current format is already aggregated; accept legacy profile dictionaries too.
+        legacy = {name: {"item": {"intl.accept_languages": values}} if isinstance(values, list) else values
+                  for name, values in languages.items()}
+        clean["browser_languages"] = sanitize_browser_languages(legacy)
+    count = snapshot.get("proxy_port_listener_count")
+    if isinstance(count, int) and not isinstance(count, bool) and count >= 0:
+        clean["proxy_port_listener_count"] = count
+    return clean
+
+
 def load_last_history(path: pathlib.Path) -> dict[str, Any] | None:
     if not path.exists():
         return None
     try:
-        lines = [line for line in path.read_text(errors="replace").splitlines() if line.strip()]
-    except Exception:
+        lines = [line for line in path.read_text().splitlines() if line.strip()]
+    except Exception as exc:
+        AUDIT.issue("history_read", reason=safe_error(exc))
         return None
     for line in reversed(lines):
         try:
-            return json.loads(line)
-        except Exception:
-            continue
+            value = json.loads(line)
+            if not isinstance(value, dict):
+                raise ValueError("expected object")
+            return sanitize_snapshot(value)
+        except Exception as exc:
+            AUDIT.issue("history_record", reason=safe_error(exc))
     return None
 
 
 def compare_history(path: pathlib.Path | None, snapshot: dict[str, Any], append: bool) -> None:
     print_section("Stability History")
     if path is None:
+        AUDIT.issue("history", "not_checked", "no history path supplied")
         print("- no history path supplied; pass --history PATH to compare or --append-history PATH to record")
         return
+    snapshot = sanitize_snapshot(snapshot)
     last = load_last_history(path)
-    if last:
-        fields = ["ip", "country", "country_name", "region", "city", "org", "asn", "loc"]
-        changes = []
-        for field in fields:
-            old = last.get(field)
-            new = snapshot.get(field)
-            if old and new and old != new:
-                changes.append(f"{field}: {old} -> {new}")
-        if changes:
-            print("- changes since previous snapshot:")
-            for item in changes:
-                print(f"  {item}")
+    if last is not None:
+        fields = ["country", "asn"]
+        comparable = [field for field in fields if last.get(field) and snapshot.get(field)]
+        missing = [field for field in fields if field not in comparable]
+        if not comparable:
+            AUDIT.issue("history_comparison", "unknown", "no comparable exit metadata")
+            print("- unknown: no comparable exit metadata; stability cannot be determined")
         else:
-            print("- no public-IP metadata changes detected against previous snapshot")
+            changed = [field for field in comparable if last[field] != snapshot[field]]
+            for field in changed:
+                print(f"  mismatch {field}: {last[field]} -> {snapshot[field]}")
+            if not changed:
+                print("- match for measured fields only: " + ", ".join(comparable))
+            if missing:
+                AUDIT.issue("history_comparison", "unknown", "missing fields: " + ", ".join(missing))
+                print("- unknown/unmeasured fields: " + ", ".join(missing))
     else:
-        print("- no previous usable snapshot found")
-
+        AUDIT.issue("history_comparison", "not_checked", "no previous usable snapshot")
+        print("- no previous usable snapshot found; no stability verdict")
     if append:
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(snapshot, ensure_ascii=False, sort_keys=True) + "\n")
-        print(f"- appended snapshot: {path}")
+        print("- appended sanitized snapshot")
     else:
         print("- history not modified")
 
 
 def build_snapshot(external: dict[str, Any], browser_summary: dict[str, Any], listeners: list[str]) -> dict[str, Any]:
-    snapshot = {
-        "timestamp": datetime.now().isoformat(timespec="seconds"),
-        "timezone": os.environ.get("TZ") or "",
-        "browser_languages": browser_summary,
-        "proxy_port_listener_count": len(listeners),
-    }
-    for key in ["ip", "country", "country_name", "region", "city", "org", "asn", "loc", "colo", "warp"]:
-        if key in external:
-            snapshot[key] = external[key]
+    snapshot = dict(external)
+    snapshot.update(timestamp=datetime.now().isoformat(timespec="seconds"),
+                    timezone=os.environ.get("TZ") or "",
+                    browser_languages=browser_summary,
+                    proxy_port_listener_count=len(listeners))
     try:
-        snapshot["localtime"] = os.readlink("/etc/localtime")
-    except OSError:
-        pass
-    return snapshot
+        snapshot["localtime"] = os.readlink("/etc/localtime").split("zoneinfo/", 1)[-1]
+    except OSError as exc:
+        AUDIT.issue("system_timezone", "unknown", safe_error(exc))
+    return sanitize_snapshot(snapshot)
 
 
 def parse_args() -> argparse.Namespace:
@@ -505,6 +563,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    AUDIT.records.clear()
     args = parse_args()
     print("# Claude Network Environment Audit")
     print(f"Generated: {datetime.now().isoformat(timespec='seconds')}")
@@ -515,27 +574,29 @@ def main() -> int:
     if args.post_ban:
         print("- post-ban checklist mode: audit first, then perform browser/app cleanup manually or only after explicit delete requests")
 
-    local_proxy_env()
-    dns_system_summary()
-    listeners = watched_ports()
-    dns_resolution()
-    browser_summary = browser_language_summary()
+    AUDIT.check(local_proxy_env)
+    AUDIT.check(dns_system_summary)
+    listeners = AUDIT.check(watched_ports) or []
+    AUDIT.check(dns_resolution)
+    browser_summary = AUDIT.check(browser_language_summary) or {}
 
     external: dict[str, Any] = {}
     if args.external:
-        external = public_ip_probes(args.timeout)
+        external = AUDIT.check(public_ip_probes, args.timeout) or {}
     else:
         print_section("External IP and Claude Reachability")
+        AUDIT.issue("external_probe", "not_checked", "not requested")
         print("- skipped; pass --external to query public IP services and Claude endpoints")
 
     if args.post_ban:
-        browser_site_data_targets()
-        post_ban_manual_cleanup_reminders()
+        AUDIT.check(browser_site_data_targets)
+        AUDIT.check(post_ban_manual_cleanup_reminders)
     manual_quality_checks(post_ban=args.post_ban)
     history_path = args.append_history or args.history
     snapshot = build_snapshot(external, browser_summary, listeners)
-    compare_history(history_path, snapshot, append=bool(args.append_history))
-    return 0
+    AUDIT.check(compare_history, history_path, snapshot, append=bool(args.append_history))
+    AUDIT.issue("browser_dns_webrtc", "not_checked", "manual browser measurements required")
+    return AUDIT.summary()
 
 
 if __name__ == "__main__":

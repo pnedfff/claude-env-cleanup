@@ -1,0 +1,810 @@
+{
+  "schema_version": 2,
+  "generated_at": "2026-10-12T07:42:36+00:00",
+  "scope": "claude",
+  "mode": "read_only_review",
+  "executable": false,
+  "completeness": "complete_within_inventory_scope",
+  "limitations": [
+    "仅固定路径元数据，不读取凭据、配置或会话正文，不递归统计目录。",
+    "未核验进程、包管理器、登录有效性、网络或自定义 CLAUDE_CONFIG_DIR。",
+    "候选项不等于授权；不存在、未检查和受保护项都不会被选择。",
+    "identity 仅为路径元数据；执行准备仍须生成内容快照并重新审阅。"
+  ],
+  "items": [
+    {
+      "id": "641e7bf10fc405b5",
+      "path": "~/.claude/cache",
+      "category": "cache",
+      "owner": "Claude Code",
+      "policy": "candidate",
+      "disposition": "candidate",
+      "observation": {
+        "state": "present",
+        "object_type": "directory",
+        "file_bytes": null,
+        "identity": {
+          "dev": 16777231,
+          "ino": 465329123,
+          "uid": 501,
+          "mode": 16877,
+          "size": 96,
+          "mtime_ns": 1791790956642089722,
+          "ctime_ns": 1791790956642089722
+        }
+      },
+      "impact": "移除本地缓存或诊断数据；可能丢失本地统计，后续运行可能重建。",
+      "protection_reason": "",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "4bb8da1b95dadca7",
+      "path": "~/.claude/stats-cache.json",
+      "category": "cache",
+      "owner": "Claude Code",
+      "policy": "candidate",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "移除本地缓存或诊断数据；可能丢失本地统计，后续运行可能重建。",
+      "protection_reason": "",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "c9578cfeb6baf5ed",
+      "path": "~/.claude/telemetry",
+      "category": "cache",
+      "owner": "Claude Code",
+      "policy": "candidate",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "移除本地缓存或诊断数据；可能丢失本地统计，后续运行可能重建。",
+      "protection_reason": "",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "a65e87036ba37a45",
+      "path": "~/.claude/usage-data",
+      "category": "cache",
+      "owner": "Claude Code",
+      "policy": "candidate",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "移除本地缓存或诊断数据；可能丢失本地统计，后续运行可能重建。",
+      "protection_reason": "",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "f561517736c1fa45",
+      "path": "~/.claude/paste-cache",
+      "category": "cache",
+      "owner": "Claude Code",
+      "policy": "candidate",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "移除本地缓存或诊断数据；可能丢失本地统计，后续运行可能重建。",
+      "protection_reason": "",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "eb1591190be060fd",
+      "path": "~/Library/Caches/claude-cli-nodejs",
+      "category": "cache",
+      "owner": "Claude",
+      "policy": "candidate",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "移除缓存或日志；日志不一定可恢复，操作前须备份。",
+      "protection_reason": "",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "74b2388db2ed4286",
+      "path": "~/Library/Caches/com.anthropic.claudefordesktop",
+      "category": "cache",
+      "owner": "Claude",
+      "policy": "candidate",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "移除缓存或日志；日志不一定可恢复，操作前须备份。",
+      "protection_reason": "",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "42d67df4359c0b5d",
+      "path": "~/Library/Caches/com.anthropic.claudefordesktop.ShipIt",
+      "category": "cache",
+      "owner": "Claude",
+      "policy": "candidate",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "移除缓存或日志；日志不一定可恢复，操作前须备份。",
+      "protection_reason": "",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "6e19b1014cd83115",
+      "path": "~/Library/Application Support/Claude/Cache",
+      "category": "cache",
+      "owner": "Claude",
+      "policy": "candidate",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "移除缓存或日志；日志不一定可恢复，操作前须备份。",
+      "protection_reason": "",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "a4cc671094e742b3",
+      "path": "~/Library/Application Support/Claude/Code Cache",
+      "category": "cache",
+      "owner": "Claude",
+      "policy": "candidate",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "移除缓存或日志；日志不一定可恢复，操作前须备份。",
+      "protection_reason": "",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "59573b0aa063670f",
+      "path": "~/Library/Application Support/Claude/GPUCache",
+      "category": "cache",
+      "owner": "Claude",
+      "policy": "candidate",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "移除缓存或日志；日志不一定可恢复，操作前须备份。",
+      "protection_reason": "",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "23545d79c55b86ab",
+      "path": "~/Library/Logs/Claude",
+      "category": "cache",
+      "owner": "Claude",
+      "policy": "candidate",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "移除缓存或日志；日志不一定可恢复，操作前须备份。",
+      "protection_reason": "",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "07ae9e65ce1719a4",
+      "path": "~/.claude/projects",
+      "category": "shared_history",
+      "owner": "Claude / Teamo shared state",
+      "policy": "protected",
+      "disposition": "protected",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "删除会造成共享会话或历史丢失。",
+      "protection_reason": "保留共享会话与历史，不因卸载官方 Claude 而移除。",
+      "selected": false,
+      "proposed_action": "preserve",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "bc5464f0f07bb7ed",
+      "path": "~/.claude/sessions",
+      "category": "shared_history",
+      "owner": "Claude / Teamo shared state",
+      "policy": "protected",
+      "disposition": "protected",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "删除会造成共享会话或历史丢失。",
+      "protection_reason": "保留共享会话与历史，不因卸载官方 Claude 而移除。",
+      "selected": false,
+      "proposed_action": "preserve",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "262281d09e91ae5d",
+      "path": "~/.claude/history.jsonl",
+      "category": "shared_history",
+      "owner": "Claude / Teamo shared state",
+      "policy": "protected",
+      "disposition": "protected",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "删除会造成共享会话或历史丢失。",
+      "protection_reason": "保留共享会话与历史，不因卸载官方 Claude 而移除。",
+      "selected": false,
+      "proposed_action": "preserve",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "964828d52c0d42fd",
+      "path": "~/.claude/file-history",
+      "category": "shared_history",
+      "owner": "Claude / Teamo shared state",
+      "policy": "protected",
+      "disposition": "protected",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "删除会造成共享会话或历史丢失。",
+      "protection_reason": "保留共享会话与历史，不因卸载官方 Claude 而移除。",
+      "selected": false,
+      "proposed_action": "preserve",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "2ea8d90049d1ef2d",
+      "path": "~/.claude/skills",
+      "category": "user_asset",
+      "owner": "User",
+      "policy": "protected",
+      "disposition": "protected",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "删除会损失个人扩展或工作流。",
+      "protection_reason": "个人技能、插件、hooks 和 commands 不属于清理目标。",
+      "selected": false,
+      "proposed_action": "preserve",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "efb6e22e0118bee3",
+      "path": "~/.claude/plugins",
+      "category": "user_asset",
+      "owner": "User",
+      "policy": "protected",
+      "disposition": "protected",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "删除会损失个人扩展或工作流。",
+      "protection_reason": "个人技能、插件、hooks 和 commands 不属于清理目标。",
+      "selected": false,
+      "proposed_action": "preserve",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "88228976d77e3d2f",
+      "path": "~/.claude/hooks",
+      "category": "user_asset",
+      "owner": "User",
+      "policy": "protected",
+      "disposition": "protected",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "删除会损失个人扩展或工作流。",
+      "protection_reason": "个人技能、插件、hooks 和 commands 不属于清理目标。",
+      "selected": false,
+      "proposed_action": "preserve",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "b60a4145b12a266d",
+      "path": "~/.claude/commands",
+      "category": "user_asset",
+      "owner": "User",
+      "policy": "protected",
+      "disposition": "protected",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "删除会损失个人扩展或工作流。",
+      "protection_reason": "个人技能、插件、hooks 和 commands 不属于清理目标。",
+      "selected": false,
+      "proposed_action": "preserve",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "37e4f76126c2ea8c",
+      "path": "~/.claude",
+      "category": "shared_root",
+      "owner": "Claude / Teamo shared state",
+      "policy": "protected",
+      "disposition": "protected",
+      "observation": {
+        "state": "present",
+        "object_type": "directory",
+        "file_bytes": null,
+        "identity": {
+          "dev": 16777231,
+          "ino": 465329122,
+          "uid": 501,
+          "mode": 16877,
+          "size": 96,
+          "mtime_ns": 1791790956642014598,
+          "ctime_ns": 1791790956642014598
+        }
+      },
+      "impact": "整体移除会覆盖共享会话、技能与配置。",
+      "protection_reason": "禁止把共享根目录整体列为候选。",
+      "selected": false,
+      "proposed_action": "preserve",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "6b4a6ab310a0cdd1",
+      "path": "~/.claude.json",
+      "category": "shared_config",
+      "owner": "Claude / Teamo shared state",
+      "policy": "protected",
+      "disposition": "protected",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "整体删除可能损失共享设置、本地项目索引或 MCP 配置。",
+      "protection_reason": "共享配置默认保留；若未来清理登录字段，须单独审阅字段级变更。",
+      "selected": false,
+      "proposed_action": "preserve",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "048ae0e839a625fe",
+      "path": "~/.claude/settings.json",
+      "category": "config",
+      "owner": "Claude / user routes",
+      "policy": "review",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "更改可能影响路由、权限、隐私控制或个人设置。",
+      "protection_reason": "存在配置不代表残留；保留有意配置，只允许另行审阅后的字段级修改。",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "b6b78bb24cf8c68e",
+      "path": "~/.claude/settings.local.json",
+      "category": "config",
+      "owner": "Claude / user routes",
+      "policy": "review",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "更改可能影响路由、权限、隐私控制或个人设置。",
+      "protection_reason": "存在配置不代表残留；保留有意配置，只允许另行审阅后的字段级修改。",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "1a15ce140a7568bf",
+      "path": "~/.claude/settings.bailian.json",
+      "category": "config",
+      "owner": "Claude / user routes",
+      "policy": "review",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "更改可能影响路由、权限、隐私控制或个人设置。",
+      "protection_reason": "存在配置不代表残留；保留有意配置，只允许另行审阅后的字段级修改。",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "80455f97404d3491",
+      "path": "~/.claude/.credentials.json",
+      "category": "auth",
+      "owner": "Claude Code",
+      "policy": "review",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "移除可能退出登录，后续需重新认证。",
+      "protection_reason": "凭据仅检查元数据，不读取或输出内容；须明确登录重置范围。",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "053ec3d42046268c",
+      "path": "~/.claude-code-now-last-dir",
+      "category": "runtime_state",
+      "owner": "Claude / shared runtime",
+      "policy": "review",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "移除会重置最近目录记录。",
+      "protection_reason": "状态文件存在本身不能证明官方 Claude 已安装。",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "82182cfc2121ad89",
+      "path": "~/Library/Application Support/Claude",
+      "category": "desktop_data",
+      "owner": "Claude Desktop",
+      "policy": "review",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "整体移除可能退出登录并丢失本地状态或设置。",
+      "protection_reason": "需要明确卸载或重置授权；父目录审阅不涵盖受保护资产或自动选择子项。",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "faeb5ad0e3db14a9",
+      "path": "~/Library/Application Support/com.anthropic.claudefordesktop",
+      "category": "desktop_data",
+      "owner": "Claude Desktop",
+      "policy": "review",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "整体移除可能退出登录并丢失本地状态或设置。",
+      "protection_reason": "需要明确卸载或重置授权；父目录审阅不涵盖受保护资产或自动选择子项。",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "b2931f7078660fd8",
+      "path": "~/Library/HTTPStorages/com.anthropic.claudefordesktop",
+      "category": "desktop_data",
+      "owner": "Claude Desktop",
+      "policy": "review",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "整体移除可能退出登录并丢失本地状态或设置。",
+      "protection_reason": "需要明确卸载或重置授权；父目录审阅不涵盖受保护资产或自动选择子项。",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "ede2ba8279e15a79",
+      "path": "~/Library/Preferences/com.anthropic.claudefordesktop.plist",
+      "category": "desktop_data",
+      "owner": "Claude Desktop",
+      "policy": "review",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "整体移除可能退出登录并丢失本地状态或设置。",
+      "protection_reason": "需要明确卸载或重置授权；父目录审阅不涵盖受保护资产或自动选择子项。",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "a77347b13c47dcb9",
+      "path": "~/Library/Saved Application State/com.anthropic.claudefordesktop.savedState",
+      "category": "desktop_data",
+      "owner": "Claude Desktop",
+      "policy": "review",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "整体移除可能退出登录并丢失本地状态或设置。",
+      "protection_reason": "需要明确卸载或重置授权；父目录审阅不涵盖受保护资产或自动选择子项。",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "7da947ea701e4caf",
+      "path": "~/.local/bin/claude",
+      "category": "entrypoint",
+      "owner": "Unverified Claude entrypoint",
+      "policy": "review",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "移除可能影响 CLI、PWA 或深链接入口。",
+      "protection_reason": "名称不足以确认归属；须核验官方安装方式及 Teamo 依赖。",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "0872673f9d50efa2",
+      "path": "~/.npm-global/bin/claude",
+      "category": "entrypoint",
+      "owner": "Unverified Claude entrypoint",
+      "policy": "review",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "移除可能影响 CLI、PWA 或深链接入口。",
+      "protection_reason": "名称不足以确认归属；须核验官方安装方式及 Teamo 依赖。",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "605189c8d59a80fe",
+      "path": "~/Applications/Chrome Apps.localized/Claude.app",
+      "category": "entrypoint",
+      "owner": "Unverified Claude entrypoint",
+      "policy": "review",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "移除可能影响 CLI、PWA 或深链接入口。",
+      "protection_reason": "名称不足以确认归属；须核验官方安装方式及 Teamo 依赖。",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "565e4a780f68734e",
+      "path": "~/Applications/Claude Code URL Handler.app",
+      "category": "entrypoint",
+      "owner": "Unverified Claude entrypoint",
+      "policy": "review",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "移除可能影响 CLI、PWA 或深链接入口。",
+      "protection_reason": "名称不足以确认归属；须核验官方安装方式及 Teamo 依赖。",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "70e95a27f734865e",
+      "path": "/Applications/Claude.app",
+      "category": "application",
+      "owner": "Claude Desktop",
+      "policy": "review",
+      "disposition": "not_found",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "卸载桌面应用，可能中断当前工作。",
+      "protection_reason": "程序本体卸载需明确授权，不能从清缓存推断。",
+      "selected": false,
+      "proposed_action": "review_only",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "5d87b92c479a1850",
+      "path": "~/.teamo",
+      "category": "preserved_integration",
+      "owner": "Teamo / Claude-to-IM",
+      "policy": "protected",
+      "disposition": "protected",
+      "observation": {
+        "state": "not_checked",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "移除可能破坏 Teamo 或 Codex 的 IM 接入。",
+      "protection_reason": "默认保留；不将名字中的 Claude 视为官方 Claude 残留，不读取其数据。",
+      "selected": false,
+      "proposed_action": "preserve",
+      "evidence": "policy_only"
+    },
+    {
+      "id": "0d403070f23853e9",
+      "path": "~/.claude-to-im",
+      "category": "preserved_integration",
+      "owner": "Teamo / Claude-to-IM",
+      "policy": "protected",
+      "disposition": "protected",
+      "observation": {
+        "state": "not_checked",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "移除可能破坏 Teamo 或 Codex 的 IM 接入。",
+      "protection_reason": "默认保留；不将名字中的 Claude 视为官方 Claude 残留，不读取其数据。",
+      "selected": false,
+      "proposed_action": "preserve",
+      "evidence": "policy_only"
+    },
+    {
+      "id": "f0f21799984976b9",
+      "path": "~/code/Claude-to-IM-skill",
+      "category": "preserved_integration",
+      "owner": "Teamo / Claude-to-IM",
+      "policy": "protected",
+      "disposition": "protected",
+      "observation": {
+        "state": "not_checked",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "移除可能破坏 Teamo 或 Codex 的 IM 接入。",
+      "protection_reason": "默认保留；不将名字中的 Claude 视为官方 Claude 残留，不读取其数据。",
+      "selected": false,
+      "proposed_action": "preserve",
+      "evidence": "policy_only"
+    },
+    {
+      "id": "eb383573bc4d7f19",
+      "path": "~/Library/LaunchAgents/com.claude-to-im.bridge.plist",
+      "category": "preserved_integration",
+      "owner": "Teamo / Claude-to-IM",
+      "policy": "protected",
+      "disposition": "protected",
+      "observation": {
+        "state": "not_checked",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "移除可能破坏 Teamo 或 Codex 的 IM 接入。",
+      "protection_reason": "默认保留；不将名字中的 Claude 视为官方 Claude 残留，不读取其数据。",
+      "selected": false,
+      "proposed_action": "preserve",
+      "evidence": "policy_only"
+    },
+    {
+      "id": "ce971aa293481593",
+      "path": "~/.claude/backups",
+      "category": "backup",
+      "owner": "User",
+      "policy": "protected",
+      "disposition": "protected",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "删除会丢失恢复副本。",
+      "protection_reason": "本轮不删除既有备份。",
+      "selected": false,
+      "proposed_action": "preserve",
+      "evidence": "fixed_path_metadata_only"
+    },
+    {
+      "id": "5ed7e53f70d0eb68",
+      "path": "~/ClaudeBackups",
+      "category": "backup",
+      "owner": "User",
+      "policy": "protected",
+      "disposition": "protected",
+      "observation": {
+        "state": "not_found",
+        "object_type": null,
+        "file_bytes": null
+      },
+      "impact": "删除会丢失恢复副本。",
+      "protection_reason": "本轮不删除既有备份。",
+      "selected": false,
+      "proposed_action": "preserve",
+      "evidence": "fixed_path_metadata_only"
+    }
+  ],
+  "fixture": true,
+  "fixture_note": "临时假目录示例，不代表本机实况。"
+}
