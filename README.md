@@ -6,6 +6,11 @@
 
 它的默认原则是：**先只读审计，明确要求清理时才改动；改动前先备份；不打印密钥内容。**
 
+**配套资源**
+
+- 背景与手动步骤：[Claude 稳定使用配置清单](https://blog.1pro.men/posts/claude-stability-checklist/)（网络出口、DNS、WebRTC、Claude Code、新号节奏）
+- 浏览器端自查：[1pro.men/whoami](https://1pro.men/whoami/)，在浏览器里看 IP、DNS、WebRTC、时区、语言和字体是否一致。本 skill 的脚本只看本机和命令行网络，浏览器能暴露的信号用这个页面补。
+
 ```mermaid
 flowchart LR
   subgraph A["① 只读审计（默认）"]
@@ -30,11 +35,6 @@ flowchart LR
   style A fill:#F5F9FF,stroke:#93C5FD,stroke-width:1px,color:#1E40AF
   linkStyle default stroke:#64748B,stroke-width:1.5px
 ```
-
-**配套资源**
-
-- 背景与手动步骤：[Claude 稳定使用配置清单](https://blog.1pro.men/posts/claude-stability-checklist/)（网络出口、DNS、WebRTC、Claude Code、新号节奏）
-- 浏览器端自查：[1pro.men/whoami](https://1pro.men/whoami/)，在浏览器里看 IP、DNS、WebRTC、时区、语言和字体是否一致。本 skill 的脚本只看本机和命令行网络，浏览器能暴露的信号用这个页面补。
 
 ## 适用场景
 

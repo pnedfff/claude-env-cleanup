@@ -6,6 +6,11 @@
 
 Its default posture is: **audit first, mutate only when explicitly asked, back up before changes, and never print secret values.**
 
+**Companion resources**
+
+- Background and manual steps: [Claude stability checklist](https://blog.1pro.men/posts/claude-stability-checklist/) (Chinese): exit node, DNS, WebRTC, Claude Code, new-account pacing.
+- Browser-side self-check: [1pro.men/whoami](https://1pro.men/whoami/) shows whether IP, DNS, WebRTC, timezone, language and fonts agree in the browser. The scripts here only see the local machine and command-line network; use the page for browser-visible signals.
+
 ```mermaid
 flowchart LR
   subgraph A["① Read-only audit (default)"]
@@ -30,11 +35,6 @@ flowchart LR
   style A fill:#F5F9FF,stroke:#93C5FD,stroke-width:1px,color:#1E40AF
   linkStyle default stroke:#64748B,stroke-width:1.5px
 ```
-
-**Companion resources**
-
-- Background and manual steps: [Claude stability checklist](https://blog.1pro.men/posts/claude-stability-checklist/) (Chinese): exit node, DNS, WebRTC, Claude Code, new-account pacing.
-- Browser-side self-check: [1pro.men/whoami](https://1pro.men/whoami/) shows whether IP, DNS, WebRTC, timezone, language and fonts agree in the browser. The scripts here only see the local machine and command-line network; use the page for browser-visible signals.
 
 ## Use Cases
 
