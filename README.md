@@ -1,19 +1,42 @@
 # Claude Env Cleanup Skill
 
-> 中文说明在前，English follows.
-
-## 中文
+**中文** | [English](README.en.md)
 
 `claude-env-cleanup` 是一个 Codex skill，用于审计和清理 macOS 本机上的 Claude / CC Switch / coding-agent 环境残留。
 
 它的默认原则是：**先只读审计，明确要求清理时才改动；改动前先备份；不打印密钥内容。**
+
+```mermaid
+flowchart LR
+  subgraph A["① 只读审计（默认）"]
+    A1["Claude 残留<br/>App · PWA · Code · Native Messaging · CC Switch"]
+    A2["网络环境<br/>IP · DNS · WebRTC · 时区 · 语言"]
+    A3["配置与隐私<br/>ANTHROPIC_* 路由 · 官方隐私开关"]
+  end
+  A1 & A2 & A3 --> B["② 结构化清单<br/>候选 / 审阅 / 保护，默认不选中"]
+  B --> C["③ 生产只读预检<br/>进程阻塞 · 路径安全 · 备份方案"]
+  C --> D["④ 清理执行器<br/>备份 → 校验 → 隔离 → 删除<br/>当前仅限临时目录测试"]
+  P["保护名单：Teamo · Claude-to-IM · 共享会话 · 技能 · 备份 · 浏览器数据"] -. 不可执行 .-> D
+  classDef audit fill:#EAF2FF,stroke:#3B82F6,stroke-width:1.5px,color:#1E3A8A
+  classDef manifest fill:#E6FAF5,stroke:#14B8A6,stroke-width:1.5px,color:#134E4A
+  classDef preflight fill:#FFF6E5,stroke:#F59E0B,stroke-width:1.5px,color:#78350F
+  classDef exec fill:#EAFBF0,stroke:#22C55E,stroke-width:1.5px,color:#14532D
+  classDef guard fill:#FEF2F2,stroke:#EF4444,stroke-width:1.5px,stroke-dasharray:5 3,color:#7F1D1D
+  class A1,A2,A3 audit
+  class B manifest
+  class C preflight
+  class D exec
+  class P guard
+  style A fill:#F5F9FF,stroke:#93C5FD,stroke-width:1px,color:#1E40AF
+  linkStyle default stroke:#64748B,stroke-width:1.5px
+```
 
 **配套资源**
 
 - 背景与手动步骤：[Claude 稳定使用配置清单](https://blog.1pro.men/posts/claude-stability-checklist/)（网络出口、DNS、WebRTC、Claude Code、新号节奏）
 - 浏览器端自查：[1pro.men/whoami](https://1pro.men/whoami/)，在浏览器里看 IP、DNS、WebRTC、时区、语言和字体是否一致。本 skill 的脚本只看本机和命令行网络，浏览器能暴露的信号用这个页面补。
 
-### 适用场景
+## 适用场景
 
 - 检查 Claude Code / Claude Desktop 是否还有残留
 - 清理 Claude App、Claude PWA、Claude Code URL Handler、Chrome Native Messaging bridge
@@ -27,7 +50,7 @@
 - 检查 browser fingerprint 相关信号，例如系统时区、`Intl` locale、浏览器语言、中文字体探测
 - 审计 coding-agent 配置中的路由覆盖、请求改写、权限绕过和高风险本地网关设置
 
-### 安装
+## 安装
 
 把这个仓库 clone 到 Codex skills 目录：
 
@@ -38,7 +61,7 @@ git clone https://github.com/pnedfff/claude-env-cleanup.git ~/.agents/skills/cla
 
 重启 Codex 后即可通过 `claude-env-cleanup` skill 触发。
 
-### 只读审计
+## 只读审计
 
 可以直接运行内置审计脚本：
 
@@ -74,7 +97,7 @@ python3 ~/.agents/skills/claude-env-cleanup/scripts/audit_network_env.py --post-
 
 这份文件只应保存地区、时区、语言、代理本地端口、DNS 摘要、ASN/服务商、WebRTC 结论、PWR 指纹风险结论等信息；不要保存完整公网 IP、局域网 IP、网关、Tailnet 地址、精确 WebRTC candidate、PWR 原始检测 payload、Cookie、token 或密钥。
 
-### 官方隐私控制
+## 官方隐私控制
 
 Claude Code 官方数据页说明可以用环境变量关闭遥测、错误上报、反馈命令、会话满意度调查和非必要流量。官方设置页说明这些环境变量也可以放进 `settings.json` 的顶层 `env` 对象。
 
@@ -120,7 +143,7 @@ Codex 可以自动做：
 - 改过时区、语言、代理、扩展或 Cookie 后，手动重启浏览器。
 - 明确授权后才删除 Cookie、Local Storage、IndexedDB、扩展、浏览器 profile、Claude App、Claude Code 或 CC Switch。
 
-### 新账号和指纹重置 takeaways
+## 新账号和指纹重置 takeaways
 
 这些是经验性稳定使用建议，不保证消除账号风险：
 
@@ -132,7 +155,7 @@ Codex 可以自动做：
 - 被封后换账号前，指纹重置是重点：清理浏览器站点数据、扩展、Native Messaging、Claude App/Code 残留、CC Switch、本地 auth/config/cache/log/telemetry 残留，并重新做浏览器侧检测。
 - 养号期可按约一个月或首次续费后理解，之后再逐步放松限制。
 
-### 安全边界
+## 安全边界
 
 - 默认不删除任何东西。
 - 浏览器 Cookie、Local Storage、IndexedDB、扩展和整份浏览器 profile 不会自动删除；这些属于高影响动作，必须手动处理或明确授权后再做。
@@ -142,172 +165,6 @@ Codex 可以自动做：
 - 默认保留 `com.claude-to-im.bridge`，它可能是 Codex/IM 接入桥，不等于官方 Claude 残留。
 - 不要删除 macOS 系统字体。PingFang、Hiragino、STHeiti、Songti/STSong 等系统字体可能仍会被 canvas 字体探测检测到。
 - ClashX 等通用代理不要和 Claude 专用 `127.0.0.1:15721` 路由混在一起清理。
-
-### 仓库结构
-
-```text
-.
-├── SKILL.md
-├── agents/
-│   └── openai.yaml
-└── scripts/
-    ├── audit_claude_env.py
-    └── audit_network_env.py
-```
-
-## English
-
-`claude-env-cleanup` is a Codex skill for auditing and cleaning local Claude / CC Switch / coding-agent residue on macOS.
-
-**Companion resources**
-
-- Background and manual steps: [Claude stability checklist](https://blog.1pro.men/posts/claude-stability-checklist/) (Chinese): exit node, DNS, WebRTC, Claude Code, new-account pacing.
-- Browser-side self-check: [1pro.men/whoami](https://1pro.men/whoami/) shows whether IP, DNS, WebRTC, timezone, language and fonts agree in the browser. The scripts here only see the local machine and command-line network; use the page for browser-visible signals.
-
-Its default posture is: **audit first, mutate only when explicitly asked, back up before changes, and never print secret values.**
-
-### Use Cases
-
-- Check whether Claude Code / Claude Desktop residue still exists
-- Clean Claude App, Claude PWA, Claude Code URL Handler, and Chrome Native Messaging bridge residue
-- Inspect `ANTHROPIC_*`, `127.0.0.1:15721`, CC Switch / 302AI / GLM route leftovers
-- Remove CC Switch app, cask, and `~/.cc-switch` state
-- Monitor Claude network environment: IP purity, DNS leaks, WebRTC leaks, and node-region stability
-- Run a post-ban three-step self-check: clear browser cookies/site data, remove CC Switch, and inspect Claude Code plus Claude Desktop
-- Generate a sanitized local environment baseline: timezone, language, exit region, DNS, ASN, WebRTC, and PWR fingerprint verdicts
-- Enable official Claude Code privacy controls for telemetry, error reporting, feedback, surveys, and nonessential traffic
-- Summarize early-account usage and fingerprint-reset takeaways
-- Inspect browser fingerprint signals such as system timezone, `Intl` locale, browser language, and installed Chinese fonts
-- Audit coding-agent config for route overrides, request rewriting, permission bypasses, and risky local gateway settings
-
-### Install
-
-Clone this repo into your Codex skills directory:
-
-```bash
-mkdir -p ~/.agents/skills
-git clone https://github.com/pnedfff/claude-env-cleanup.git ~/.agents/skills/claude-env-cleanup
-```
-
-Restart Codex, then invoke the `claude-env-cleanup` skill when needed.
-
-### Read-Only Audit
-
-Run the bundled audit script directly:
-
-```bash
-python3 ~/.agents/skills/claude-env-cleanup/scripts/audit_claude_env.py --audit
-```
-
-The script reports safe summaries only, such as file presence, key-name presence, route markers, process/port status, and browser bridge state. It does not print raw tokens, API keys, OAuth refresh tokens, or private config values.
-
-The audit also checks whether official Claude privacy controls are enabled in the current process or in the `env` block of `~/.claude/settings*.json`.
-
-For network environment auditing, run:
-
-```bash
-python3 ~/.agents/skills/claude-env-cleanup/scripts/audit_network_env.py
-```
-
-By default it only checks local proxy, DNS, route, and browser-language state. Add `--external` when you want live public-IP and Claude reachability probes. Manual review defaults to 3 core sites only: `ip.net.coffee/claude`, `ippure.com/claude`, and `iplark.com`.
-
-For post-ban self-checks:
-
-```bash
-python3 ~/.agents/skills/claude-env-cleanup/scripts/audit_network_env.py --post-ban
-```
-
-This mode prints browser site-data cleanup targets, clear manual-action reminders, and the 5 guide sites: `ip.net.coffee/claude`, `iplark.com`, `net.coffee`, `ippure.com`, and `cc.mastersgo.cc`.
-
-For a reusable local environment baseline, store the sanitized profile at:
-
-```text
-~/.claude/session-env/environment-fingerprint-profile.md
-```
-
-The profile should keep region, timezone, languages, local proxy ports, DNS summary, ASN/provider, WebRTC verdicts, and PWR fingerprint risk verdicts only. Do not store full public IPs, LAN IPs, gateways, tailnet addresses, exact WebRTC candidates, raw PWR detection payloads, cookies, tokens, or secrets.
-
-### Official Privacy Controls
-
-Claude Code's official data usage page documents environment variables for disabling telemetry, error reporting, feedback, session surveys, and nonessential traffic. The official settings page says environment variables can also be configured under the top-level `env` key in `settings.json`.
-
-Recommended `~/.claude/settings.json` values:
-
-```json
-{
-  "env": {
-    "DISABLE_TELEMETRY": "1",
-    "DISABLE_ERROR_REPORTING": "1",
-    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
-    "DISABLE_FEEDBACK_COMMAND": "1",
-    "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
-    "DO_NOT_TRACK": "1"
-  }
-}
-```
-
-Notes:
-
-- This is a privacy-control posture, not zero data retention or a full fingerprint reset.
-- `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` does not disable the WebFetch domain safety check.
-- `skipWebFetchPreflight: true` is a separate WebFetch safety-check opt-out with security tradeoffs and should not be set automatically by default.
-- Restart Claude Code, Claude Desktop, and related terminal sessions after changing these values.
-
-References:
-
-- [Claude Code data usage](https://code.claude.com/docs/en/data-usage)
-- [Claude Code settings](https://code.claude.com/docs/en/settings)
-
-Codex can automatically:
-
-- Run read-only audits for timezone, language, proxy, system DNS, default route, local ports, and public-exit summaries.
-- Back up and merge official privacy controls into the `env` block of `~/.claude/settings.json`.
-- Create `~/.claude/session-env/`.
-- Write a sanitized candidate profile.
-- Re-read the file to check that it does not contain obvious full public IPs, LAN IPs, tailnet addresses, WebRTC candidates, cookies, or secrets.
-
-The user must manually:
-
-- Confirm the candidate before it is treated as a user-confirmed local baseline.
-- Open `ip.net.coffee/claude`, `ippure.com/claude`, and `iplark.com` in the real browser for DNS/WebRTC/PWR/IP-risk verdicts.
-- Restart the browser after timezone, language, proxy, extension, or cookie changes.
-- Explicitly approve deletion of cookies, Local Storage, IndexedDB, extensions, browser profiles, Claude App, Claude Code, or CC Switch.
-
-### Early-Account and Fingerprint-Reset Takeaways
-
-These are operational stability heuristics, not a guarantee that account risk is eliminated:
-
-- For the first two weeks, prefer the official Claude Desktop/App path and avoid standalone CLI use.
-- During the early account phase, avoid third-party clients such as OpenCode, OpenClaw, and CraftAgent.
-- Keep a human-like work/rest rhythm; avoid continuous 24-hour high-load use.
-- IP type is not the only signal; avoid crowded public proxies and avoid frequent IP, country, or ASN switching early on.
-- Do not share accounts.
-- After a ban, fingerprint reset is the key step before using a new account: clear browser site data, extensions, Native Messaging, Claude App/Code residue, CC Switch, local auth/config/cache/log/telemetry residue, then re-check in the real browser.
-- Treat the warm-up period as roughly one month or after the first renewal, then relax constraints gradually.
-
-### Safety Boundaries
-
-- Do not delete anything by default.
-- Browser cookies, Local Storage, IndexedDB, extensions, and full browser profiles are not deleted automatically; they are high-impact actions and must be handled manually or with explicit authorization.
-- Public repos should contain only generic workflow instructions, not a specific machine's full IP, LAN, tailnet, or WebRTC candidate data.
-- Create a timestamped backup before editing or removing files, usually under `/Users/<you>/Backups/`.
-- Preserve Teamo, `~/.teamo`, and `~/.claude/projects` by default.
-- Preserve `com.claude-to-im.bridge` by default; it may be a Codex/IM bridge rather than official Claude residue.
-- Do not delete macOS system fonts. PingFang, Hiragino, STHeiti, and Songti/STSong may remain detectable by canvas font probes.
-- Do not conflate general proxies such as ClashX with Claude-specific routing on `127.0.0.1:15721`.
-
-### Repository Layout
-
-```text
-.
-├── SKILL.md
-├── agents/
-│   └── openai.yaml
-└── scripts/
-    ├── audit_claude_env.py
-    └── audit_network_env.py
-```
-
 
 ## 审计输出与检查完整性
 
@@ -326,7 +183,6 @@ These are operational stability heuristics, not a guarantee that account risk is
 ```bash
 python3 ~/.agents/skills/claude-env-cleanup/scripts/test_audit_minimal.py
 ```
-
 
 ## 结构化清理审阅清单
 
@@ -356,7 +212,6 @@ python3 ~/.agents/skills/claude-env-cleanup/scripts/audit_claude_env.py --audit
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s ~/.agents/skills/claude-env-cleanup/scripts -p 'test_*.py'
 ```
 
-
 ## 清理执行器：第三批，临时目录测试限定
 
 `scripts/cleanup_executor.py` 提供 `FixtureWorkspace.prepare(manifest, ids)` 与 `execute(plan)`。工作区只能由内部 `TemporaryDirectory` 创建，不接受真实用户目录参数；直接运行该模块会拒绝真实清理。第三批测试使用假进程快照，第四批真实只读采集见下文；进程状态缺失或不完整时拒绝执行，绝不自动终止 Claude、Teamo 或 Claude-to-IM。
@@ -380,7 +235,6 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s ~/.agents/skills/claud
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s ~/.agents/skills/claude-env-cleanup/scripts -p 'test_*.py'
 ```
 
-
 ## 第四批：真实进程采集与生产路径只读预检
 
 `scripts/production_preflight.py` 只读检查当前用户可见进程和固定 Claude 候选路径，输出清理计划与备份方案；没有创建备份、修改配置、停止进程或删除数据的代码入口。
@@ -400,3 +254,21 @@ python3 ~/.agents/skills/claude-env-cleanup/scripts/production_preflight.py --fo
 - 退出码 2 表示有阻塞；0 仅表示已测范围内没有已知阻塞，仍需审阅、准确项目授权及重新采样。真实路径写入执行入口继续关闭。
 
 本机预检报告属于本地用户资料，应写入工作区 `outputs/` 或指定本地目录，不提交到公开技能仓库。脚本 stdout 默认仅输出报告，不默认落盘。
+
+## 仓库结构
+
+```text
+.
+├── SKILL.md
+├── README.md / README.en.md
+├── agents/openai.yaml
+├── examples/                      # 假数据清单与执行回执示例
+└── scripts/
+    ├── audit_claude_env.py        # Claude 残留审计 + 清单
+    ├── audit_network_env.py       # 网络环境审计
+    ├── audit_support.py           # 公共函数
+    ├── cleanup_manifest.py        # 结构化清单
+    ├── cleanup_executor.py        # 临时目录测试执行器
+    ├── production_preflight.py    # 生产只读预检
+    └── test_*.py                  # 假数据回归
+```
