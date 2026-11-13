@@ -20,7 +20,7 @@ flowchart LR
   end
   A1 & A2 & A3 --> B["② 结构化清单<br/>候选 / 审阅 / 保护，默认不选中"]
   B --> C["③ 生产只读预检<br/>进程阻塞 · 路径安全 · 备份方案"]
-  C --> D["④ 清理执行器<br/>备份 → 校验 → 隔离 → 删除<br/>当前仅限临时目录测试"]
+  C --> D["④ 移入废纸篓<br/>确认码 → 逐项移动 → 回执 → 可撤回<br/>仅限缓存与日志"]
   P["保护名单：Teamo · Claude-to-IM · 共享会话 · 技能 · 备份 · 浏览器数据"] -. 不可执行 .-> D
   classDef audit fill:#EAF2FF,stroke:#3B82F6,stroke-width:1.5px,color:#1E3A8A
   classDef manifest fill:#E6FAF5,stroke:#14B8A6,stroke-width:1.5px,color:#134E4A
@@ -204,7 +204,7 @@ python3 ~/.agents/skills/claude-env-cleanup/scripts/audit_claude_env.py --audit
 
 清单含稳定项目 ID、路径、类别、预期归属、检测状态、候选/审阅/保护判定、影响、保护原因和默认未选中状态。归属来自固定路径规则，不表示已核验安装身份；不存在的路径不称为候选。目录大小不递归计算。Teamo、Claude-to-IM 只记录保留政策而不访问其数据；共享会话、个人技能与旧备份始终受保护。文件或父目录符号链接不跟随，并标为检查不完整。
 
-`executable: false`、`selected: false` 和 `review_only` 表示本轮仅供审阅。项目 ID 可用于生成临时测试工作区中的执行准备计划；清单本身不构成删除授权，也不是内容快照或恢复备份。真实清理入口仍关闭。`--audit` 与 `--format json` 不可组合，避免把纯元数据清单混同于详细诊断结果。
+`executable: false`、`selected: false` 和 `review_only` 表示本轮仅供审阅。项目 ID 可用于生成临时测试工作区中的执行准备计划；清单本身不构成删除授权，也不是内容快照或恢复备份。清单本身不可执行；真实执行只有第五批的 `trash_cleanup.py`。`--audit` 与 `--format json` 不可组合，避免把纯元数据清单混同于详细诊断结果。
 
 假目录生成的示例：`examples/cleanup-manifest.fixture.json`。它不代表本机实际状态。运行全部假数据回归：
 
@@ -227,7 +227,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s ~/.agents/skills/claud
 5. 原对象按目录描述符原子移动到隔离暂存区，再核对实际移入的对象和进程后删除。原路径上新出现的文件不会被删除或覆盖。
 6. 任一错误立即停止，回执分别记录已删除、未执行、执行前失败、暂存保留或删除失败可能部分完成。已删除项不自动回滚；备份和残余暂存数据用于显式恢复。错误只输出固定原因或异常类型。
 
-这是临时目录测试实现，不是已验收的生产清理器；测试上下文退出后临时备份也会删除，不能当成真实用户数据的恢复方案。`examples/cleanup-execution.fixture.json` 仅为假数据成功/失败回执示例。真实路径的写入执行与恢复操作仍未开放；第四批增加真实只读采集和路径预检。
+这是临时目录测试实现，不是已验收的生产清理器；测试上下文退出后临时备份也会删除，不能当成真实用户数据的恢复方案。`examples/cleanup-execution.fixture.json` 仅为假数据成功/失败回执示例。本模块本身不接触真实路径；第四批增加真实只读采集和路径预检，第五批另设仅限缓存/日志、移入废纸篓的真实入口。
 
 只运行假数据回归：
 
@@ -251,9 +251,35 @@ python3 ~/.agents/skills/claude-env-cleanup/scripts/production_preflight.py --fo
 - 备份仅提出 `~/Backups/ClaudeCleanup/<plan-id>` 的方案，检查现有父路径、容量下限与访问条件，不做写入试验。目录权限拟为 0700，文件拟为 0600；任何清理前须对全部选中项做内容摘要、目录结构、源状态和备份清单读回验证。
 - 若任何目录大小未知，备份总容量与所需空间估算保持未知，仅报告已扫描部分和最低空间下限。容量预检不能替代实际备份成功验证。
 - 自定义 `CLAUDE_CONFIG_DIR` 仅报告需另行明确范围，不自动扩大扫描，不显示其私有值。
-- 退出码 2 表示有阻塞；0 仅表示已测范围内没有已知阻塞，仍需审阅、准确项目授权及重新采样。真实路径写入执行入口继续关闭。
+- 退出码 2 表示有阻塞；0 仅表示已测范围内没有已知阻塞，仍需审阅、准确项目授权及重新采样。本报告本身不可执行；真实执行只有第五批的 `trash_cleanup.py`，它会重新采样并要求确认码。
 
 本机预检报告属于本地用户资料，应写入工作区 `outputs/` 或指定本地目录，不提交到公开技能仓库。脚本 stdout 默认仅输出报告，不默认落盘。
+
+## 第五批：缓存与日志移入废纸篓
+
+`scripts/trash_cleanup.py` 是唯一会改动真实用户目录的入口，范围只有清单里的固定缓存/日志候选项。动作是移入废纸篓批次，不删除，不清空废纸篓。配置、认证、应用卸载、浏览器数据、共享会话、技能、Teamo、Claude-to-IM 和备份不能通过任何参数进入执行范围；命令行没有路径或根目录参数。
+
+```bash
+# 1. 只读：列出可处理项、不会处理的项、阻塞原因和确认码
+python3 ~/.agents/skills/claude-env-cleanup/scripts/trash_cleanup.py plan
+
+# 2. 用户审阅并明确同意后执行；可用 --ids 只选部分项目（plan 与 run 须一致）
+python3 ~/.agents/skills/claude-env-cleanup/scripts/trash_cleanup.py run --confirm <确认码>
+
+# 3. 撤回一个批次
+python3 ~/.agents/skills/claude-env-cleanup/scripts/trash_cleanup.py restore --batch <批次名>
+```
+
+- 确认码由所选项目的 ID、路径、元数据摘要和父目录身份算出。目录内容或选择一变，旧确认码即失效，须重新 `plan` 并重新取得用户同意。AI 不得自行生成同意或跳过审阅。
+- 进程采集不完整，或检测到 Claude、Teamo、Claude-to-IM、共享 Claude 状态的使用者时拒绝执行，执行中每一项之前重新检测。进程列表在两次采样之间变化会使样本不完整，此时最多重采 12 次，只接受完整且无相关进程的样本。本工具不终止任何进程，须由用户自行退出后重试。正在使用这些目录的 Claude Code 不能清理自身，应在普通终端运行。
+- 移动是同一卷内的原子重命名，移入 `~/.Trash/ClaudeCleanup-<UTC 时间>-<确认码>/<项目 ID>`，批次内写入 `receipt.json`。跨卷时直接停止，没有“复制再删除”的退路。移动后核对实际移入对象的元数据摘要。
+- 目录超过 10,000 个条目或 10 秒扫描上限、含符号链接父路径、硬链接、特殊文件或他人所有的对象时，该项列入“不会处理”并留在原处，不提高上限。
+- 废纸篓批次就是恢复副本，没有另外的复制备份。清空废纸篓后无法撤回；访达的“放回原处”对这些项目不可用，撤回请用 `restore`。
+- `restore` 的目标位置来自固定项目表，不取自回执文本。原路径已被重新创建（Claude 下次启动通常会重建缓存）时不覆盖，该项保留在废纸篓并标为 `source_recreated_not_overwritten`；废纸篓内副本被改动时同样不恢复。
+- 终端没有“完全磁盘访问权限”时 macOS 可能拒绝访问 `~/.Trash`，此时报 `trash_unavailable_check_full_disk_access`，不改用其他位置。
+- 任一错误立即停止，回执逐项记录 `moved`、`not_moved` 等状态。已移走的项不自动回滚。
+
+验证范围：`test_trash_cleanup.py` 在临时目录内覆盖移动、撤回、保护项拒绝、符号链接、进程阻塞、跨卷、确认码失效和原路径重建。真实用户目录上只验证过“Claude 运行时拒绝执行”，尚未做过一次完整的真实移动与撤回验收。
 
 ## 仓库结构
 
@@ -270,5 +296,6 @@ python3 ~/.agents/skills/claude-env-cleanup/scripts/production_preflight.py --fo
     ├── cleanup_manifest.py        # 结构化清单
     ├── cleanup_executor.py        # 临时目录测试执行器
     ├── production_preflight.py    # 生产只读预检
+    ├── trash_cleanup.py           # 缓存/日志移入废纸篓与撤回
     └── test_*.py                  # 假数据回归
 ```
