@@ -310,7 +310,7 @@ def build_preflight(home=None, applications=None, process_probe=None):
                             "未读取文件正文；元数据摘要不能代替执行前内容快照。",
                             "只覆盖固定 Claude 路径及当前用户可见进程；不保证识别所有关闭文件的未知包装器。",
                             "进程与空间状态可变化，任何未来执行必须重新预检并获得准确项目授权。",
-                            "真实路径执行器仍关闭，生产计划不能交给临时目录执行器。"]}
+                            "本报告不可执行，也不能交给临时目录执行器；真实执行只有 trash_cleanup.py，它会重新采样。"]}
 
 
 def render_markdown(plan):

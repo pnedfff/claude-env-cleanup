@@ -20,7 +20,7 @@ flowchart LR
   end
   A1 & A2 & A3 --> B["② Structured manifest<br/>candidate / review / protected, unselected by default"]
   B --> C["③ Production read-only preflight<br/>process blockers · path safety · backup plan"]
-  C --> D["④ Cleanup executor<br/>backup → verify → quarantine → delete<br/>temp-dir fixtures only for now"]
+  C --> D["④ Move to Trash<br/>confirm code → move item by item → receipt → restore<br/>caches and logs only"]
   P["Protected: Teamo · Claude-to-IM · shared sessions · skills · backups · browser data"] -. never executable .-> D
   classDef audit fill:#EAF2FF,stroke:#3B82F6,stroke-width:1.5px,color:#1E3A8A
   classDef manifest fill:#E6FAF5,stroke:#14B8A6,stroke-width:1.5px,color:#134E4A
@@ -185,7 +185,7 @@ Each item has a stable ID, path, category, expected owner, detection status, can
 5. Move originals atomically to quarantine, re-check, then delete. New files at the original path are never touched.
 6. Stop on any error; the receipt records deleted, not run, failed, quarantined, or possibly partial items. No automatic rollback.
 
-This is a test implementation, not an accepted production cleaner. Real-path write execution and restore remain closed. Example receipt: `examples/cleanup-execution.fixture.json`.
+This is a test implementation, not an accepted production cleaner. This module never touches real paths; the only live entry point is `trash_cleanup.py` below. Example receipt: `examples/cleanup-execution.fixture.json`.
 
 ## Production Read-Only Preflight
 
@@ -222,6 +222,24 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s ~/.agents/skills/claud
 - Do not delete macOS system fonts. PingFang, Hiragino, STHeiti, and Songti/STSong may remain detectable by canvas font probes.
 - Do not conflate general proxies such as ClashX with Claude-specific routing on `127.0.0.1:15721`.
 
+## Move Caches and Logs to Trash
+
+`scripts/trash_cleanup.py` is the only entry point that changes real user directories. It covers only the fixed cache/log candidates and moves them into a Trash batch. It never deletes and never empties the Trash. The CLI has no path or root option.
+
+```bash
+python3 ~/.agents/skills/claude-env-cleanup/scripts/trash_cleanup.py plan
+python3 ~/.agents/skills/claude-env-cleanup/scripts/trash_cleanup.py run --confirm <code>
+python3 ~/.agents/skills/claude-env-cleanup/scripts/trash_cleanup.py restore --batch <batch>
+```
+
+- The confirm code is derived from the selected item IDs, paths, metadata digests and parent identities. Any change invalidates it.
+- Execution is refused while Claude, Teamo, Claude-to-IM or another user of shared Claude state is running, or when the process probe is incomplete. Nothing is killed. Run it from a plain terminal, not from the Claude Code session being cleaned.
+- Items move by same-volume rename into `~/.Trash/ClaudeCleanup-<UTC time>-<code>/`. A cross-volume move stops; there is no copy-and-delete fallback. Trees over the 10,000-entry or 10-second scan limit are skipped and left in place.
+- The Trash batch is the only recovery copy. Emptying the Trash ends undo, and Finder's Put Back does not apply; use `restore`. `restore` never overwrites a path that has been recreated.
+- A terminal without Full Disk Access may be denied `~/.Trash`.
+
+Verified in temporary directories by `test_trash_cleanup.py`. On a real home directory only the refusal while Claude is running has been observed; a full real move and restore has not been accepted yet.
+
 ## Repository Layout
 
 ```text
@@ -237,5 +255,6 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s ~/.agents/skills/claud
     ├── cleanup_manifest.py        # structured manifest
     ├── cleanup_executor.py        # temp-dir fixture executor
     ├── production_preflight.py    # production read-only preflight
+    ├── trash_cleanup.py           # move caches/logs to Trash, and restore
     └── test_*.py                  # fixture regression tests
 ```
